@@ -13,12 +13,15 @@ Route-ON 프로젝트에서 함께 작업할 때 지켜야 할 규칙입니다. 
 
 ### 브랜치 이름 규칙
 
+**접두어 없이 본인 영문 이름으로만 만듭니다.**
+
 ```
-backend/이름-작업내용
-frontend/이름-작업내용
+이름
 ```
 
-예시: `backend/jiwon-tsptw-solver`, `frontend/minsu-map-ui`
+예시: `jiwon`, `minsu`, `hana`, `seoyeon`
+
+(참고: 브랜치 자체는 폴더에 속하는 게 아니라 저장소 전체를 가리킵니다. 백엔드 담당자는 `backend/` 폴더, 프론트엔드 담당자는 `frontend/` 폴더 안에서만 작업하는 방식으로 관습적으로 구분합니다.)
 
 ---
 
@@ -33,7 +36,7 @@ frontend/이름-작업내용
 
 2. **새 개인 브랜치를 만듭니다.**
    ```bash
-   git checkout -b backend/이름-작업내용
+   git checkout -b 이름
    ```
    (GitHub Desktop: 상단 "Current branch" → "New branch")
 
@@ -43,7 +46,7 @@ frontend/이름-작업내용
 
 4. **작업이 끝나면 push 후 PR을 올립니다.**
    ```bash
-   git push -u origin backend/이름-작업내용
+   git push -u origin 이름
    ```
    GitHub 저장소 페이지에서 "Compare & pull request" 클릭 → `main`으로 PR 생성.
 
