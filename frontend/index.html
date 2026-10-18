@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Route:On - 코스 최적화</title>
 
-    <!-- 1. 카카오맵 SDK (https: 추가) -->
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1de754db133c5a56a2ebf7e018c8aa6e&libraries=services"></script>
+    <!-- 📍 하드코딩된 API 키를 Vite 환경변수(%VITE_KAKAO_JAVASCRIPT_KEY%)로 변경 -->
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=%VITE_KAKAO_JAVASCRIPT_KEY%&libraries=services"></script>
 
-    <!-- 2. 카카오 로그인 SDK -->
+    <!-- 카카오 로그인 SDK -->
     <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   </head>
   <body>
