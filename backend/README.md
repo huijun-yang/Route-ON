@@ -36,3 +36,31 @@ uvicorn app.main:app --reload  # http://localhost:8000/api/v1/health
 | `KMA_API_KEY` | 기상청 공공데이터 API | |
 
 프론트엔드 변수는 `frontend/.env`에 두며 이름이 `VITE_`로 시작합니다. (`VITE_KAKAO_JAVASCRIPT_KEY`: 카카오 JavaScript 키)
+
+## Swagger 로 API 시험하기
+
+서버를 켠 뒤 http://localhost:8000/docs 에서 API 를 직접 호출해볼 수 있습니다.
+로그인이 필요한 API 는 카카오 로그인 없이도 아래 개발용 토큰으로 시험할 수 있습니다. (로컬 개발 전용)
+
+```bash
+cd backend
+python -m scripts.dev_token   # 'dev-local' 테스트 사용자를 만들고 JWT 를 출력
+```
+
+출력된 토큰을 `/docs` 오른쪽 위 **Authorize** 에 붙여넣으면 됩니다.
+
+## API 요약
+
+| 메서드 | 경로 | 설명 | 로그인 |
+|---|---|---|---|
+| GET | `/api/v1/health`, `/api/v1/health/db` | 서버/DB 상태 확인 | 불필요 |
+| POST | `/api/v1/auth/kakao` | 카카오 토큰으로 로그인, JWT 발급 | 불필요 |
+| GET | `/api/v1/auth/me` | 내 정보 | 필요 |
+| POST | `/api/v1/places` | 장소 저장(이미 있으면 기존 값 유지) | 필요 |
+| GET | `/api/v1/places/{place_id}` | 장소 조회 | 불필요 |
+| POST | `/api/v1/places/{place_id}/business-hours` | 내 영업시간 저장/수정(요일 단위) | 필요 |
+| GET | `/api/v1/places/{place_id}/business-hours` | 내 영업시간 조회 | 필요 |
+| DELETE | `/api/v1/places/{place_id}/business-hours/{weekday}` | 내 영업시간 삭제 | 필요 |
+
+영업시간은 `(사용자, 장소, 요일)` 단위로 개인 계정에만 저장되며 다른 사용자에게 공유되지 않습니다.
+`weekday` 는 0=월 ~ 6=일, `open_time`/`close_time` 이 같으면 24시간 영업, 자정을 넘기는 심야 영업도 허용합니다.
