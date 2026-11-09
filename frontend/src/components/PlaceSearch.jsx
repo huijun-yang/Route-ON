@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
+import StatusHandler from './StatusHandler'; // 👈 9번 예외 처리 컴포넌트 불러오기
 
 const PlaceSearch = ({ onAddPlace }) => {
   const [keyword, setKeyword] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
+
+  // 9번: API 로딩, 에러, 빈 결과용 상태(State) 추가
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   // 세부 입력 정보
   const [openTime, setOpenTime] = useState('10:00');
@@ -21,26 +28,36 @@ const PlaceSearch = ({ onAddPlace }) => {
     }
 
     if (!window.kakao || !window.kakao.maps) {
-      alert('카카오맵 API 키가 등록되지 않았거나 로드되지 않았습니다.');
+      setIsError(true);
+      setErrorMessage('카카오맵 API 키가 등록되지 않았거나 SDK 로드에 실패했습니다.');
       return;
     }
 
+    // 검색 시작 시 로딩 및 상태 초기화
+    setIsLoading(true);
+    setIsError(false);
+    setHasSearched(true);
+
     window.kakao.maps.load(() => {
       if (!window.kakao.maps.services || !window.kakao.maps.services.Places) {
-        alert('카카오 장소 검색 서비스(services)를 불러오지 못했습니다.');
+        setIsLoading(false);
+        setIsError(true);
+        setErrorMessage('카카오 장소 검색 서비스(services)를 불러오지 못했습니다.');
         return;
       }
 
       const ps = new window.kakao.maps.services.Places();
       ps.keywordSearch(keyword, (data, status) => {
+        setIsLoading(false); // API 통신 완료 시 로딩 종료
+
         if (status === window.kakao.maps.services.Status.OK) {
           setSearchResults(data);
           setSelectedPlace(null); // 새 검색 시 기존 선택 초기화
         } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-          alert('검색 결과가 존재하지 않습니다.');
           setSearchResults([]);
         } else {
-          alert('장소 검색 중 오류가 발생했습니다.');
+          setIsError(true);
+          setErrorMessage('장소 검색 중 오류가 발생했습니다.');
           setSearchResults([]);
         }
       });
@@ -84,6 +101,7 @@ const PlaceSearch = ({ onAddPlace }) => {
     setSelectedPlace(null);
     setSearchResults([]);
     setKeyword('');
+    setHasSearched(false);
   };
 
   return (
@@ -105,35 +123,44 @@ const PlaceSearch = ({ onAddPlace }) => {
         </button>
       </div>
 
-      {/* 검색 결과 목록 */}
-      {searchResults.length > 0 && (
-        <ul style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', padding: '0', margin: '0 0 12px 0', listStyle: 'none', borderRadius: '4px' }}>
-          {searchResults.map((item) => {
-            const isSelected = selectedPlace?.id === item.id;
-            return (
-              <li
-                key={item.id}
-                onClick={() => handleSelectPlace(item)}
-                style={{
-                  cursor: 'pointer',
-                  padding: '10px 12px',
-                  borderBottom: '1px solid #f0f0f0',
-                  backgroundColor: isSelected ? '#e8f4ff' : '#ffffff',
-                  borderLeft: isSelected ? '4px solid #2196F3' : 'none',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <div style={{ fontWeight: isSelected ? 'bold' : 'normal', color: isSelected ? '#1976D2' : '#333' }}>
-                  {item.place_name}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
-                  {item.address_name || item.road_address_name}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {/* 9번: StatusHandler 컴포넌트로 검색 결과 영역 감싸기 */}
+      <StatusHandler
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={errorMessage}
+        isEmpty={hasSearched && searchResults.length === 0}
+        emptyMessage="검색 결과가 존재하지 않습니다. 다른 검색어로 검색해보세요."
+      >
+        {/* 검색 결과 목록 */}
+        {searchResults.length > 0 && (
+          <ul style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', padding: '0', margin: '0 0 12px 0', listStyle: 'none', borderRadius: '4px' }}>
+            {searchResults.map((item) => {
+              const isSelected = selectedPlace?.id === item.id;
+              return (
+                <li
+                  key={item.id}
+                  onClick={() => handleSelectPlace(item)}
+                  style={{
+                    cursor: 'pointer',
+                    padding: '10px 12px',
+                    borderBottom: '1px solid #f0f0f0',
+                    backgroundColor: isSelected ? '#e8f4ff' : '#ffffff',
+                    borderLeft: isSelected ? '4px solid #2196F3' : 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  <div style={{ fontWeight: isSelected ? 'bold' : 'normal', color: isSelected ? '#1976D2' : '#333' }}>
+                    {item.place_name}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                    {item.address_name || item.road_address_name}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </StatusHandler>
 
       {/* 선택된 장소 세부 정보 입력창 */}
       {selectedPlace && (
