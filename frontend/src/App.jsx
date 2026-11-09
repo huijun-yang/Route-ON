@@ -4,8 +4,9 @@ import RouteMap from './components/RouteMap';
 import PriorityView from './components/PriorityView';
 import Timeline from './components/Timeline';
 import GroupVote from './components/GroupVote';
-import CourseHistory from './components/CourseHistory'; // 👈 8번 컴포넌트 추가
-import './App.css'; // 👈 반응형 스타일 연동
+import CourseHistory from './components/CourseHistory';
+import WeatherFatigue from './components/WeatherFatigue'; // 👈 날씨 예보 및 피로도 지표 컴포넌트 추가
+import './App.css';
 
 function App() {
   const [places, setPlaces] = useState([]);
@@ -100,6 +101,9 @@ function App() {
 
       {/* 1. 장소 검색 */}
       <PlaceSearch onAddPlace={handleAddPlace} />
+
+      {/* ⚡ 날씨 정보 및 코스 피로도 지표 (기획서 2차 개발 4번) */}
+      <WeatherFatigue places={places} />
 
       {/* 7. 그룹 코스 투표 */}
       <GroupVote onConfirmPlaces={handleConfirmGroupPlaces} />
