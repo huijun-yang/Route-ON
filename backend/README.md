@@ -30,6 +30,7 @@ uvicorn app.main:app --reload  # http://localhost:8000/api/v1/health
 | `DATABASE_URL` | PostgreSQL 접속 주소 | 로컬은 docker-compose 기본값 사용 |
 | `JWT_SECRET_KEY` | JWT 서명 키 | 운영 환경에서는 반드시 변경 |
 | `JWT_ALGORITHM` | JWT 알고리즘 | 기본 `HS256` |
+| `JWT_EXPIRE_MINUTES` | JWT 유효 시간(분) | 기본 `10080`(7일) |
 | `KAKAO_REST_API_KEY` | 카카오 로컬/로그인 REST API | 카카오 개발자 콘솔에서 발급 |
 | `TMAP_APP_KEY` | Tmap 대중교통 API | |
 | `KMA_API_KEY` | 기상청 공공데이터 API | |

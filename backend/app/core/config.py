@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = "change-me-in-env"
     jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 기본 7일
 
     class Config:
         env_file = ".env"
