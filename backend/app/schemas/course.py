@@ -15,6 +15,7 @@ class CourseStopRead(BaseModel):
     id: str
     visit_order: int
     arrival_time: time | None = None
+    departure_time: time | None = None  # 출발 예상 시각
     stay_duration: int | None = None  # 분
     estimated_cost: int = 0
     place: PlaceRead
