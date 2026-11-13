@@ -22,7 +22,10 @@ const fetchInstance = async (endpoint, options = {}) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
     throw new Error(
-      errorData?.message || `HTTP Error: ${response.status}`
+      errorData?.message ||
+      (typeof errorData?.detail === "string"
+        ? errorData.detail
+        : `HTTP Error: ${response.status}`)
     );
   }
 
