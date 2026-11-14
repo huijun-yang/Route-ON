@@ -1,10 +1,10 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const fetchInstance = async (endpoint, options = {}) => {
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem('accessToken');
 
   const headers = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
     ...options.headers,
   };
 
@@ -23,7 +23,7 @@ const fetchInstance = async (endpoint, options = {}) => {
     const errorData = await response.json().catch(() => null);
     throw new Error(
       errorData?.message ||
-      (typeof errorData?.detail === "string"
+      (typeof errorData?.detail === 'string'
         ? errorData.detail
         : `HTTP Error: ${response.status}`)
     );
