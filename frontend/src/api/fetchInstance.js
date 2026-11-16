@@ -13,9 +13,14 @@ const fetchInstance = async (endpoint, options = {}) => {
     headers.Authorization = `Bearer ${token}`;
   }
 
+  // 서버에 API 요청 및 네트워크 오류 처리
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers,
+  }).catch(() => {
+    throw new Error('Network Error', {
+      cause: error,
+    });
   });
 
   // HTTP 오류 처리
