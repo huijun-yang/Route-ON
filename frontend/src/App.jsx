@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import PlaceSearch from './components/places/PlaceSearch';
-import RouteMap from './components/RouteMap';
-import PriorityView from './components/PriorityView';
-import Timeline from './components/Timeline';
+import RouteMap from './components/map/RouteMap';
+import PriorityView from './components/common/PriorityView';
+import Timeline from './components/courses/Timeline';
 import GroupVote from './components/groups/GroupVote';
-import CourseHistory from './components/CourseHistory';
-import WeatherFatigue from './components/WeatherFatigue'; // 👈 날씨 예보 및 피로도 지표 컴포넌트 추가
+import CourseHistory from './components/courses/CourseHistory';
+import WeatherFatigue from './components/common/WeatherFatigue'; // 👈 날씨 예보 및 피로도 지표 컴포넌트 추가
 import './App.css';
 
 function App() {
@@ -83,9 +83,9 @@ function App() {
   const totalCost = places.reduce((sum, p) => sum + (p.expected_cost || 0), 0);
 
   return (
-    <div className="app-container">
+    <div>
       {/* 헤더 */}
-      <header className="app-header">
+      <header>
         <h2 style={{ margin: 0, fontSize: '22px' }}>🚩 Route:On - 대중교통 코스 최적화 Web App</h2>
         {user ? (
           <div>
