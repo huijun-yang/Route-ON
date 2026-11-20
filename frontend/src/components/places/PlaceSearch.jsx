@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import StatusHandler from './StatusHandler'; // 👈 9번 예외 처리 컴포넌트 불러오기
+import StatusHandler from '../common/StatusHandler'; // 👈 9번 예외 처리 컴포넌트 불러오기
 
 const PlaceSearch = ({ onAddPlace }) => {
   const [keyword, setKeyword] = useState('');

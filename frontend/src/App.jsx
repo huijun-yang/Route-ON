@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import PlaceSearch from './components/PlaceSearch';
+import PlaceSearch from './components/places/PlaceSearch';
 import RouteMap from './components/RouteMap';
 import PriorityView from './components/PriorityView';
 import Timeline from './components/Timeline';
-import GroupVote from './components/GroupVote';
+import GroupVote from './components/groups/GroupVote';
 import CourseHistory from './components/CourseHistory';
 import WeatherFatigue from './components/WeatherFatigue'; // 👈 날씨 예보 및 피로도 지표 컴포넌트 추가
 import './App.css';
