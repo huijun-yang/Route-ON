@@ -10,9 +10,10 @@ import CourseViewPage from "./pages/CourseViewPage";
 import GroupCoursesPage from "./pages/GroupCoursesPage";
 import HistoryPage from "./pages/HistoryPage";
 import MyPage from "./pages/MyPage";
+import { useAuth } from "./contexts/AuthContext";
 
 export default function App() {
-  const isLoggedIn = true; // 추후 인증 Context 연결
+  const { isLoggedIn } = useAuth(); // 추후 인증 Context 연결
 
   return (
     <Routes>

@@ -1,0 +1,72 @@
+import { createContext, use, useContext, useEffect, useState } from "react";
+import { getMyInfo } from "../api/authApi";
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [authStatus, setAuthStatus] = useState("loading");
+
+  const checkAuth = async () => {
+    // 토큰을 이용해 로그인 여부 확인
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      setUser(null);
+      setAuthStatus("anonymous");
+      return;
+    }
+
+    const result = getMyInfo();
+
+    setUser(result);
+    setAuthStatus("authenticated");
+  }
+
+  // 앱 최초 실행 시 인증 확인
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // 로그인 처리
+  const login = async (accessToken) => {
+    localStorage.setItem("accessToken", accessToken);
+    await checkAuth();
+  };
+
+  // 로그아웃 처리
+  const logout = async () => {
+    localStorage.removeItem("accessToken");
+    setUser(null);
+    setAuthStatus("anonymous");
+  };
+
+  const value = {
+    user,
+    authStatus,
+    isLoggedIn: authStatus === "authenticated",
+    isLoading: authStatus === "loading",
+    login,
+    logout,
+    checkAuth,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// 다른 컴포넌트에서 AuthContext 사용
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if(!context) {
+    throw new Error(
+      "useAuth must be used within AuthProvider"
+    );
+  }
+
+  return context;
+}

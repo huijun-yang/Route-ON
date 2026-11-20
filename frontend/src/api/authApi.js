@@ -9,9 +9,6 @@ export const loginWithKakao = async (kakaoAccessToken) => {
     }),
   });
 
-  // 백엔드에서 발급한 JWT 저장
-  localStorage.setItem('accessToken', result.access_token);
-
   return result;
 };
 
