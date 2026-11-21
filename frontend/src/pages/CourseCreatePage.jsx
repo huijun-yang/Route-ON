@@ -8,6 +8,8 @@ export default function CourseCreatePage() {
   const [step, setStep] = useState(1);
   // 장소 데이터
   const [places, setPlaces] = useState([]);
+  // 선택한 장소
+  const [selectedPlace, setSelectedPlace] = useState();
   // 생성된 코스
   const [course, setCourse] = useState([]);
 
@@ -16,9 +18,10 @@ export default function CourseCreatePage() {
       <section className="course-create-workspace">
         <CourseCreateWorkspace step={step} setStep={setStep}
         places={places} setPlaces={setPlaces}
-        course={course} setCourse={setCourse} />
+        course={course} setCourse={setCourse}
+        selectedPlace={selectedPlace} setSelectedPlace={setSelectedPlace} />
       </section>
-      <RouteMap places={places} course={course} step={step} />
+      <RouteMap places={places} course={course} selectedPlace={selectedPlace} step={step} />
     </div>
   )
 }

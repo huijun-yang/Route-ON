@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-const RouteMap = ({ places, course, step }) => {
+const RouteMap = ({ places, course, selectedPlace, step }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
@@ -44,11 +44,9 @@ const RouteMap = ({ places, course, step }) => {
       return;
     }
 
-    // 첫 번째 장소를 중심으로 설정
-    const options = {
-      center: new window.kakao.maps.LatLng(stops[0].lat, stops[0].lng),
-      level: 5,
-    };
+    // 선택된 장소가 없으면 첫 번째 장소를 중심으로 설정
+    targetPlace = selectedPlace ?? stops[0];
+    map.setCenter(new window.kakao.maps.LatLng(targetPlace.lat, targetPlace.lng));
 
     const linePath = [];
     const markers = [];
@@ -62,6 +60,8 @@ const RouteMap = ({ places, course, step }) => {
         position: position,
         map: map,
       });
+
+      markers.push(marker);
 
       // 마커 인포윈도우 (순서 표시)
       const infowindow = new window.kakao.maps.InfoWindow({

@@ -10,6 +10,8 @@ export default function CourseCreateWorkspace({
   setPlaces,
   course,
   setCourse,
+  selectedPlace,
+  setSelectedPlace
 }) {
   // 다음 단계 이동
   const gotoNextStep = () => {
