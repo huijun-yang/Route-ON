@@ -32,7 +32,7 @@ export default function CourseCreateWorkspace({
   const addPlace = (newPlace) => {
     setPlaces((prev) => {
       // 이미 추가된 장소라면 중복 추가 방지
-      if (prev.some((place) => place.place_id === newPlace.id)) {
+      if (prev.some((place) => place.kakao_place_id === newPlace.kakao_place_id)) {
         return prev;
       }
 
@@ -40,10 +40,19 @@ export default function CourseCreateWorkspace({
     });
   };
 
+  // 장소 영업시간 수정
+  const modifyPlace = (selectedPlace) => {
+    setPlaces((prev) => prev.map((place) =>
+      place.kakao_place_id === selectedPlace.kakao_place_id
+        ? { ...place, ...selectedPlace }
+        : place
+    ));
+  }
+
   // 장소 삭제
-  const removePlace = (placeId) => {
+  const removePlace = (selectedPlace) => {
     setPlaces((prev) =>
-      prev.filter((place) => place.place_id !== placeId)
+      prev.filter((place) => place.kakao_place_id !== selectedPlace.kakao_place_id)
     );
   };
 
@@ -51,7 +60,8 @@ export default function CourseCreateWorkspace({
     <section>
       {step === 1 && (
         <PlaceStep gotoNextStep={gotoNextStep} places={places}
-        addPlace={addPlace} removePlace={removePlace} />
+        addPlace={addPlace} modifyPlace={modifyPlace} removePlace={removePlace} 
+        selectedPlace={selectedPlace} setSelectedPlace={setSelectedPlace} />
       )}
 
       {step === 2 && (

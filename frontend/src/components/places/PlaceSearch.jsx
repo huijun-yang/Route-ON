@@ -13,6 +13,7 @@ const PlaceSearch = ({ onAddPlace }) => {
   const [hasSearched, setHasSearched] = useState(false);
 
   // 세부 입력 정보
+  const [address, setAddress] = useState('');
   const [openTime, setOpenTime] = useState('10:00');
   const [closeTime, setCloseTime] = useState('22:00');
   const [breakStart, setBreakStart] = useState('');
@@ -83,9 +84,17 @@ const PlaceSearch = ({ onAddPlace }) => {
   const handleAdd = () => {
     if (!selectedPlace) return;
 
+    const geocoder = new window.kakao.maps.services.Geocoder();
+    const coord = new window.kakao.maps.LatLng(
+      parseFloat(selectedPlace.x), parseFloat(selectedPlace.y));
+    geocoder.coord2Address(coord.getLng(), coord.getLat(), (result, status) => {
+      setAddress(result[0]);
+    })
+
     onAddPlace({
-      place_id: selectedPlace.id,
+      kakao_place_id: selectedPlace.id,
       name: selectedPlace.place_name,
+      address: address,
       lat: parseFloat(selectedPlace.y),
       lng: parseFloat(selectedPlace.x),
       category: selectedPlace.category_name,
@@ -174,6 +183,12 @@ const PlaceSearch = ({ onAddPlace }) => {
             </label>
             <label style={{ fontSize: '13px' }}>
               영업 종료: <input type="time" value={closeTime} onChange={(e) => setCloseTime(e.target.value)} style={{ width: '100%', padding: '4px', marginTop: '4px' }} />
+            </label>
+            <label style={{ fontSize: '13px' }}>
+              휴식 시작: <input type="time" value={breakStart} onChange={(e) => setOpenTime(e.target.value)} style={{ width: '100%', padding: '4px', marginTop: '4px' }} />
+            </label>
+            <label style={{ fontSize: '13px' }}>
+              휴식 종료: <input type="time" value={breakEnd} onChange={(e) => setCloseTime(e.target.value)} style={{ width: '100%', padding: '4px', marginTop: '4px' }} />
             </label>
             <label style={{ fontSize: '13px' }}>
               체류시간(분): <input type="number" value={stayDuration} onChange={(e) => setStayDuration(e.target.value)} style={{ width: '100%', padding: '4px', marginTop: '4px' }} />

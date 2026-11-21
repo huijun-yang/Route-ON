@@ -13,7 +13,7 @@ import MyPage from "./pages/MyPage";
 import { useAuth } from "./contexts/AuthContext";
 
 export default function App() {
-  const { isLoggedIn, logout } = useAuth(); // 추후 인증 Context 연결
+  const { isLoggedIn, logout } = useAuth();
 
   return (
     <Routes>

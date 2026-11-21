@@ -39,18 +39,14 @@ const RouteMap = ({ places, course, selectedPlace, step }) => {
 
     // 장소가 없으면 기본 지도만 출력
     if (stops.length === 0) {
-      map.setCenter(defaultPosition);
       map.relayout();
+      map.setCenter(defaultPosition);
       return;
     }
-
-    // 선택된 장소가 없으면 첫 번째 장소를 중심으로 설정
-    targetPlace = selectedPlace ?? stops[0];
-    map.setCenter(new window.kakao.maps.LatLng(targetPlace.lat, targetPlace.lng));
-
+    
     const linePath = [];
     const markers = [];
-
+    
     stops.forEach((stop, index) => {
       const position = new window.kakao.maps.LatLng(stop.lat, stop.lng);
       linePath.push(position);
@@ -60,9 +56,9 @@ const RouteMap = ({ places, course, selectedPlace, step }) => {
         position: position,
         map: map,
       });
-
+      
       markers.push(marker);
-
+      
       // 마커 인포윈도우 (순서 표시)
       const infowindow = new window.kakao.maps.InfoWindow({
         content: `<div style="padding:5px;font-size:12px;">${index + 1}. ${stop.name}</div>`,
@@ -71,7 +67,7 @@ const RouteMap = ({ places, course, selectedPlace, step }) => {
     });
 
     mapRef.current.markers = markers;
-
+    
     if(step === 3) {
       // 이동 경로 선 그리기
       const polyline = new window.kakao.maps.Polyline({
@@ -84,11 +80,15 @@ const RouteMap = ({ places, course, selectedPlace, step }) => {
       polyline.setMap(map);
       mapRef.current.polyline = polyline;
     }
-
+    
     // 지도 영역 재계산
     map.relayout();
 
-  }, [places, course, step]);
+    // 선택된 장소가 없으면 첫 번째 장소를 중심으로 설정
+    const targetPlace = selectedPlace ?? stops[0];
+    map.setCenter(new window.kakao.maps.LatLng(targetPlace.lat, targetPlace.lng));
+    
+  }, [places, course, selectedPlace, step]);
 
   return <div ref={mapRef} style={{ flex: "1", minWidth: "0px" }}></div>;
 };

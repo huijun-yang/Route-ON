@@ -9,7 +9,7 @@ export default function CourseCreatePage() {
   // 장소 데이터
   const [places, setPlaces] = useState([]);
   // 선택한 장소
-  const [selectedPlace, setSelectedPlace] = useState();
+  const [selectedPlace, setSelectedPlace] = useState(null);
   // 생성된 코스
   const [course, setCourse] = useState([]);
 
