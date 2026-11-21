@@ -66,11 +66,12 @@ export default function CourseCreateWorkspace({
 
       {step === 2 && (
         <LoadingStep gotoNextStep={gotoNextStep} gotoPrevStep={gotoPrevStep}
-        setCourse={setCourse} />
+        places={places} setCourse={setCourse} />
       )}
 
       {step === 3 && (
-        <ResultStep gotoFirstStep={gotoFirstStep} course={course} />
+        <ResultStep gotoFirstStep={gotoFirstStep} course={course}
+        setSelectedPlace={setSelectedPlace} />
       )}
     </section>
   )

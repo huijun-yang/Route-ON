@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authStatus, setAuthStatus] = useState("loading");
 
-  const checkAuth = async () => {
+  const checkAuth = async (signal) => {
     // 토큰을 이용해 로그인 여부 확인
     const token = localStorage.getItem("accessToken");
 
@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const result = await getMyInfo();
+    const result = await getMyInfo(signal);
 
     setUser(result);
     setAuthStatus("authenticated");
@@ -25,7 +25,23 @@ export function AuthProvider({ children }) {
 
   // 앱 최초 실행 시 인증 확인
   useEffect(() => {
-    checkAuth();
+    const controller = new AbortController();
+
+    const initState = async () => {
+      try {
+        await checkAuth(controller.signal);
+      } catch(error) {
+        if (error.name === "AbortError" || error.code === "ERR_CANCELED") {
+          return;
+        }
+      }
+    }
+
+    initState();
+
+    return () => {
+      controller.abort();
+    }
   }, []);
 
   // 로그인 처리

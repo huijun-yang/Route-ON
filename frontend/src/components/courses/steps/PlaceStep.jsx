@@ -87,7 +87,10 @@ export default function PlaceStep({
           </div>
         ))}
       </div>
-      <button onClick={gotoNextStep}>생성</button>
+      <button onClick={() => {
+        setSelectedPlace(null);
+        gotoNextStep();
+      }}>생성</button>
     </div>
   )
 }
