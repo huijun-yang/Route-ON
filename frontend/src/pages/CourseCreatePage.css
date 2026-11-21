@@ -1,0 +1,11 @@
+.course-create-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+}
+
+.course-create-workspace {
+  width: 500px;
+  height: 100%;
+  border: 0px;
+}

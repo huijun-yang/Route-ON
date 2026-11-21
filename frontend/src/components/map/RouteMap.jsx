@@ -1,17 +1,57 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-const RouteMap = ({ stops }) => {
+const RouteMap = ({ places, course, step }) => {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+
   useEffect(() => {
-    if (!window.kakao || !window.kakao.maps || stops.length === 0) return;
+    const container = mapRef.current;
 
-    const container = document.getElementById('map');
+    if (!container || !window.kakao?.maps) return;
+
+    // 기본 지도 중심 좌표 (서울시청)
+    const defaultPosition = new window.kakao.maps.LatLng(37.5665, 126.978);
+
+    // 지도 최초 생성
+    if (!mapInstance.current) {
+      mapInstance.current = new window.kakao.maps.Map(
+        container, {
+          center: defaultPosition,
+          level: 5,
+        }
+      );
+    }
+
+    const map = mapInstance.current;
+    const stops = (step === 1 || step === 2) ? places : course;
+
+    // 기존 마커 제거
+    if (mapRef.current.markers) {
+      mapRef.current.markers.forEach(
+        marker => marker.setMap(null)
+      );
+    }
+
+    // 기존 경로 제거
+    if (mapRef.current.polyline) {
+      mapRef.current.polyline.setMap(null);
+    }
+
+    // 장소가 없으면 기본 지도만 출력
+    if (stops.length === 0) {
+      map.setCenter(defaultPosition);
+      map.relayout();
+      return;
+    }
+
+    // 첫 번째 장소를 중심으로 설정
     const options = {
       center: new window.kakao.maps.LatLng(stops[0].lat, stops[0].lng),
       level: 5,
     };
-    const map = new window.kakao.maps.Map(container, options);
 
     const linePath = [];
+    const markers = [];
 
     stops.forEach((stop, index) => {
       const position = new window.kakao.maps.LatLng(stop.lat, stop.lng);
@@ -30,18 +70,27 @@ const RouteMap = ({ stops }) => {
       infowindow.open(map, marker);
     });
 
-    // 이동 경로 선 그리기
-    const polyline = new window.kakao.maps.Polyline({
-      path: linePath,
-      strokeWeight: 5,
-      strokeColor: '#FF0000',
-      strokeOpacity: 0.7,
-      strokeStyle: 'solid',
-    });
-    polyline.setMap(map);
-  }, [stops]);
+    mapRef.current.markers = markers;
 
-  return <div id="map" style={{ width: '100%', height: '350px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #ccc' }}></div>;
+    if(step === 3) {
+      // 이동 경로 선 그리기
+      const polyline = new window.kakao.maps.Polyline({
+        path: linePath,
+        strokeWeight: 5,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.7,
+        strokeStyle: 'solid',
+      });
+      polyline.setMap(map);
+      mapRef.current.polyline = polyline;
+    }
+
+    // 지도 영역 재계산
+    map.relayout();
+
+  }, [places, course, step]);
+
+  return <div ref={mapRef} style={{ flex: "1", minWidth: "0px" }}></div>;
 };
 
 export default RouteMap;

@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const result = getMyInfo();
+    const result = await getMyInfo();
 
     setUser(result);
     setAuthStatus("authenticated");

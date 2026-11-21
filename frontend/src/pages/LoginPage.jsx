@@ -52,7 +52,7 @@ export default function LoginPage() {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      "min-height": "100vh"}}>
+      minHeight: "100vh"}}>
       <button onClick={ handleLogin } style={{border: "0px"}}>
         <img src={kakaoIcon} />
       </button>
