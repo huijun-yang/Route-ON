@@ -22,6 +22,10 @@ export function AuthProvider({ children }) {
       setUser(result);
       setAuthStatus("authenticated");
     } catch(error) {
+      // 요청 취소는 인증 실패로 처리하지 않음
+      if (signal?.aborted || error.name === "AbortError" || error.code === "ERR_CANCELED")
+        return;
+
       setUser(null);
       setAuthStatus("anonymous");
     }
@@ -31,17 +35,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    const initState = async () => {
-      try {
-        await checkAuth(controller.signal);
-      } catch(error) {
-        if (error.name === "AbortError" || error.code === "ERR_CANCELED") {
-          return;
-        }
-      }
-    }
-
-    initState();
+    checkAuth(controller.signal);
 
     return () => {
       controller.abort();
@@ -51,6 +45,7 @@ export function AuthProvider({ children }) {
   // 로그인 처리
   const login = async (accessToken) => {
     localStorage.setItem("accessToken", accessToken);
+    setAuthStatus("loading");
     await checkAuth();
   };
 
