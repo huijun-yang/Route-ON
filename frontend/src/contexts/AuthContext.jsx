@@ -17,10 +17,14 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const result = await getMyInfo(signal);
-
-    setUser(result);
-    setAuthStatus("authenticated");
+    try {
+      const result = await getMyInfo(signal);
+      setUser(result);
+      setAuthStatus("authenticated");
+    } catch(error) {
+      setUser(null);
+      setAuthStatus("anonymous");
+    }
   }
 
   // 앱 최초 실행 시 인증 확인
