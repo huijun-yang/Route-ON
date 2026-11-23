@@ -31,7 +31,7 @@ export default function App() {
 
       {/* 로그인해야 접근 가능한 페이지 */}
       <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
-        <Route element={<MainLayout isLoggedIn={isLoggedIn} />}>
+        <Route element={<MainLayout isLoggedIn={isLoggedIn} onLogout={logout} />}>
           <Route path="/course/create" element={<CourseCreatePage />} />
           <Route path="/groups" element={<GroupCoursesPage />} />
           <Route path="/history" element={<HistoryPage />} />
