@@ -1,6 +1,6 @@
 import RouteMap from "../components/map/RouteMap";
 import CourseCreateWorkspace from "../components/courses/CourseCreateWorkspace";
-import "./CourseCreatePage.css";
+import "../styles/workspace.css";
 import { useState } from "react";
 
 export default function CourseCreatePage() {
@@ -15,12 +15,10 @@ export default function CourseCreatePage() {
 
   return (
     <div className="course-create-wrapper">
-      <section className="course-create-workspace">
-        <CourseCreateWorkspace step={step} setStep={setStep}
-        places={places} setPlaces={setPlaces}
-        course={course} setCourse={setCourse}
-        selectedPlace={selectedPlace} setSelectedPlace={setSelectedPlace} />
-      </section>
+      <CourseCreateWorkspace step={step} setStep={setStep}
+      places={places} setPlaces={setPlaces}
+      course={course} setCourse={setCourse}
+      selectedPlace={selectedPlace} setSelectedPlace={setSelectedPlace} />
       <RouteMap places={places} course={course} selectedPlace={selectedPlace} step={step} />
     </div>
   )

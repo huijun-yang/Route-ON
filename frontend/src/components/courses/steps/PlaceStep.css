@@ -1,0 +1,41 @@
+/* 장소 정보 입력 */
+.place-info-input {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+}
+
+.place-info-table {
+  display: flex;
+  margin: 0 auto;
+  justify-content: center;
+
+  width: 100%;
+}
+
+.place-info-table tbody {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+}
+
+.place-info-table tr {
+  display: flex;
+
+  width: 100%;
+}
+
+.place-info-table th,
+.place-info-table td {
+  text-align: center;
+
+  width: 50%;
+}
+
+.place-info-save {
+  width: 30%;
+}
