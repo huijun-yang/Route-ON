@@ -23,11 +23,6 @@ export default function CourseCreateWorkspace({
     setStep(step => step - 1);
   }
 
-  // 첫 단계 이동
-  const gotoFirstStep = () => {
-    setStep(1);
-  }
-
   // 장소 추가
   const addPlace = (newPlace) => {
     setPlaces((prev) => {
@@ -41,36 +36,41 @@ export default function CourseCreateWorkspace({
   };
 
   // 장소 영업시간 수정
-  const modifyPlace = (selectedPlace) => {
+  const modifyPlace = (targetPlace) => {
     setPlaces((prev) => prev.map((place) =>
-      place.kakao_place_id === selectedPlace.kakao_place_id
-        ? { ...place, ...selectedPlace }
+      place.kakao_place_id === targetPlace.kakao_place_id
+        ? { ...place, ...targetPlace }
         : place
     ));
   }
 
   // 장소 삭제
-  const removePlace = (selectedPlace) => {
+  const removePlace = (targetPlace) => {
+    // 삭제하려는 장소가 선택된 장소일 경우 선택 취소
+    if (selectedPlace?.kakao_place_id === targetPlace.kakao_place_id)
+      setSelectedPlace(null);
+
+    // 장소 삭제
     setPlaces((prev) =>
       prev.filter((place) => place.kakao_place_id !== selectedPlace.kakao_place_id)
     );
   };
 
   return (
-    <section>
+    <section className="course-create-workspace">
       {step === 1 && (
-        <PlaceStep gotoNextStep={gotoNextStep} places={places}
+        <PlaceStep onNext={gotoNextStep} places={places}
         addPlace={addPlace} modifyPlace={modifyPlace} removePlace={removePlace} 
         selectedPlace={selectedPlace} setSelectedPlace={setSelectedPlace} />
       )}
 
       {step === 2 && (
-        <LoadingStep gotoNextStep={gotoNextStep} gotoPrevStep={gotoPrevStep}
+        <LoadingStep onNext={gotoNextStep} onPrev={gotoPrevStep}
         places={places} setCourse={setCourse} />
       )}
 
       {step === 3 && (
-        <ResultStep gotoFirstStep={gotoFirstStep} course={course}
+        <ResultStep onPrev={() => setStep(1)} course={course}
         setSelectedPlace={setSelectedPlace} />
       )}
     </section>

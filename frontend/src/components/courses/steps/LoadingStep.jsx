@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function LoadingStep({gotoNextStep, gotoPrevStep, places, setCourse}) {
+export default function LoadingStep({onNext, onPrev, places, setCourse}) {
   useEffect(() => {
     let canceled = false;
 
@@ -21,13 +21,13 @@ export default function LoadingStep({gotoNextStep, gotoPrevStep, places, setCour
         if (canceled) return;
 
         setCourse(places);
-        gotoNextStep();
+        onNext();
 
       } catch(error) {
         if (canceled) return;
 
         alert(error.message);
-        gotoPrevStep();
+        onPrev();
       }
     }
 
