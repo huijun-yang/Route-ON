@@ -1,0 +1,64 @@
+.course-create-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+}
+
+.course-create-workspace {
+  width: 500px;
+  height: 100%;
+  border: 0px;
+}
+
+/* 작업 영역 */
+.step-workspace {
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  min-height: 0;
+}
+
+/* 장소들 리스트 */
+.places-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+
+  padding-inline: 20px;
+  
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.places-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* 장소 하나 */
+.place-item {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* 장소 이름 */
+.place-title {
+  display: flex;
+  justify-content: space-between;
+
+  width: 100%;
+}
+
+/* 스텝 이동 버튼 */
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 10px;
+
+  margin-top: auto;
+  flex-shrink: 0;
+}

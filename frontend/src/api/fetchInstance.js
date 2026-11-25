@@ -17,7 +17,7 @@ const fetchInstance = async (endpoint, options = {}) => {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers,
-  }).catch(() => {
+  }).catch((error) => {
     throw new Error('Network Error', {
       cause: error,
     });
