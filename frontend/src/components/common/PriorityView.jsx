@@ -1,29 +1,27 @@
-import React from 'react';
+import { formatDuration } from '../../utils/time';
 
+// 우선순위별 코스(최단 시간 / 최소 도보 / 최저 비용)를 나란히 비교하고 하나를 고릅니다.
 const PriorityView = ({ variants, onSelectVariant, selectedPriority }) => {
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <h3>2. 경로 우선순위 선택</h3>
-      <div style={{ display: 'flex', gap: '12px' }}>
+    <div>
+      <h3 className="card-title">우선순위별 코스 비교</h3>
+      <div className="priority-grid">
         {variants.map((v) => (
-          <div
+          <button
             key={v.priority_type}
+            className={`priority-card${selectedPriority === v.priority_type ? ' selected' : ''}`}
             onClick={() => onSelectVariant(v)}
-            style={{
-              flex: 1,
-              padding: '12px',
-              border: selectedPriority === v.priority_type ? '2px solid #007BFF' : '1px solid #ccc',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              backgroundColor: selectedPriority === v.priority_type ? '#e7f1ff' : '#fff',
-            }}
           >
             <h4>{v.title}</h4>
-            <p>총 소요시간: {v.total_time}분</p>
-            <p>총 도보량: {v.total_walk}m</p>
-            <p>총 교통비: {v.total_cost}원</p>
-            <p style={{ fontWeight: 'bold', color: '#ff9800' }}>피로도: {v.fatigue_level}</p>
-          </div>
+            <p className="big">{formatDuration(v.total_time)}</p>
+            <p>도보 {v.total_walk.toLocaleString()}m</p>
+            <p>{v.total_cost.toLocaleString()}원</p>
+            <p style={{ marginTop: '6px' }}>
+              <span className="badge badge-accent" title="피로도">
+                {v.fatigue_level}
+              </span>
+            </p>
+          </button>
         ))}
       </div>
     </div>

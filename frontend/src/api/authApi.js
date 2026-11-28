@@ -13,6 +13,15 @@ export const loginWithKakao = async (kakaoAccessToken, signal) => {
   return result;
 };
 
+// 닉네임 수정 (로그인 필요)
+export const updateMyInfo = (nickname, signal) => {
+  return fetchInstance('/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ nickname }),
+    signal,
+  });
+};
+
 // 내 정보 조회 (로그인 필요)
 export const getMyInfo = (signal) => {
   return fetchInstance('/auth/me', {

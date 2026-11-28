@@ -5,16 +5,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.models import User
 from app.schemas.auth import KakaoLoginRequest, TokenResponse
-from app.schemas.user import UserRead
+from app.schemas.user import UserRead, UserUpdate
 from app.services.kakao import (
     KakaoAuthError,
     KakaoServiceError,
     fetch_kakao_profile,
     get_kakao_client,
+    verify_token_app_id,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -28,6 +30,7 @@ def login_with_kakao(
 ):
     """카카오 액세스 토큰을 검증하고, 사용자를 저장(없으면 생성)한 뒤 서비스 JWT 를 발급합니다."""
     try:
+        verify_token_app_id(body.access_token, client, settings.kakao_app_id)
         profile = fetch_kakao_profile(body.access_token, client)
     except KakaoAuthError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid kakao access token")
@@ -62,4 +65,17 @@ def login_with_kakao(
 @router.get("/me", response_model=UserRead)
 def read_me(current_user: User = Depends(get_current_user)):
     """JWT 로 로그인 상태를 확인합니다. (로그인이 필요한 API 의 예시)"""
+    return current_user
+
+
+@router.patch("/me", response_model=UserRead)
+def update_me(
+    body: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """마이페이지: 닉네임을 수정합니다. (다음 카카오 로그인 때 카카오 닉네임으로 다시 덮어써집니다)"""
+    current_user.nickname = body.nickname
+    db.commit()
+    db.refresh(current_user)
     return current_user

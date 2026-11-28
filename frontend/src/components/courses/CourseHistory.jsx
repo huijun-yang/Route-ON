@@ -1,116 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Trash2 } from 'lucide-react';
+import { deleteCourse, getMyCourses } from '../../api/coursesApi';
+import StatusHandler from '../common/StatusHandler';
+import { formatDuration } from '../../utils/time';
 
-const CourseHistory = ({ currentPlaces, onLoadCourse }) => {
-  const [savedCourses, setSavedCourses] = useState([]);
-  const [courseName, setCourseName] = useState('');
+const STATUS_BADGE = {
+  PARTIAL: { className: 'badge badge-warning', text: '일부 장소 제외' },
+  NO_FEASIBLE: { className: 'badge badge-danger', text: '방문 불가' },
+};
 
-  // LocalStorage에서 저장된 코스 목록 불러오기
+// 내가 만든 코스 목록 (백엔드에 저장된 히스토리)
+const CourseHistory = () => {
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
-    const history = localStorage.getItem('routeon_course_history');
-    if (history) {
-      setSavedCourses(JSON.parse(history));
-    }
+    const controller = new AbortController();
+    getMyCourses({ onlyActive: true }, controller.signal)
+      .then((data) => setCourses(data ?? []))
+      .catch((error) => {
+        if (error.name !== 'AbortError') setErrorMessage(error.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+    return () => controller.abort();
   }, []);
 
-  // 현재 코스 저장 핸들러
-  const handleSaveCourse = () => {
-    if (!currentPlaces || currentPlaces.length === 0) {
-      alert('저장할 코스 장소가 없습니다.');
-      return;
+  const handleDelete = async (course) => {
+    if (!window.confirm(`'${course.title}' 코스를 삭제할까요? (3개 버전이 모두 삭제됩니다)`)) return;
+    try {
+      await deleteCourse(course.id);
+      setCourses((prev) => prev.filter((c) => c.group_id !== course.group_id));
+    } catch (error) {
+      alert(`삭제하지 못했습니다: ${error.message}`);
     }
-    if (!courseName.trim()) {
-      alert('코스 이름을 입력해 주세요.');
-      return;
-    }
-
-    const newCourse = {
-      id: Date.now(),
-      name: courseName,
-      date: new Date().toLocaleDateString('ko-KR'),
-      places: currentPlaces,
-    };
-
-    const updated = [newCourse, ...savedCourses];
-    setSavedCourses(updated);
-    localStorage.setItem('routeon_course_history', JSON.stringify(updated));
-    setCourseName('');
-    alert('코스가 히스토리에 저장되었습니다!');
-  };
-
-  // 저장된 코스 삭제
-  const handleDeleteCourse = (id) => {
-    const updated = savedCourses.filter((course) => course.id !== id);
-    setSavedCourses(updated);
-    localStorage.setItem('routeon_course_history', JSON.stringify(updated));
   };
 
   return (
-    <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '16px' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '12px' }}>8. 코스 히스토리 (저장 / 불러오기)</h3>
+    <div className="page">
+      <h2 className="page-title">코스 히스토리</h2>
+      <p className="page-subtitle">지금까지 만든 코스예요. 눌러서 일정과 지도를 다시 볼 수 있어요.</p>
 
-      {/* 코스 저장 입력창 */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="저장할 코스 이름 (예: 성수동 데이트 코스)"
-          value={courseName}
-          onChange={(e) => setCourseName(e.target.value)}
-          style={{ flex: '1 1 200px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-        <button
-          onClick={handleSaveCourse}
-          style={{ padding: '8px 16px', backgroundColor: '#FF9800', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          💾 현재 코스 저장
-        </button>
-      </div>
-
-      {/* 저장된 코스 히스토리 리스트 */}
-      {savedCourses.length === 0 ? (
-        <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>저장된 코스 히스토리가 없습니다.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {savedCourses.map((course) => (
-            <div
-              key={course.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '10px 12px',
-                border: '1px solid #eee',
-                borderRadius: '6px',
-                backgroundColor: '#fdfdfd',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '15px' }}>{course.name}</strong>
-                <span style={{ fontSize: '12px', color: '#888', marginLeft: '8px' }}>({course.date})</span>
-                <div style={{ fontSize: '13px', color: '#555', marginTop: '4px' }}>
-                  📍 {course.places.map((p) => p.name).join(' ➔ ')}
+      <StatusHandler
+        isLoading={isLoading}
+        isError={Boolean(errorMessage)}
+        errorMessage={errorMessage}
+        isEmpty={courses.length === 0}
+        emptyMessage="아직 만든 코스가 없어요. '코스 만들기'에서 첫 코스를 만들어 보세요."
+      >
+        <div className="stack">
+          {courses.map((course) => {
+            const badge = STATUS_BADGE[course.status];
+            return (
+              <div
+                key={course.id}
+                className="list-item clickable"
+                onClick={() => navigate(`/course/view/${course.id}`)}
+              >
+                <div className="row-between">
+                  <strong style={{ color: 'var(--color-primary)' }}>{course.title}</strong>
+                  <button
+                    className="icon-btn"
+                    aria-label="코스 삭제"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(course);
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
+                <div className="row-wrap" style={{ margin: '8px 0 6px' }}>
+                  <span className="badge">{course.course_date}</span>
+                  <span className="badge">{formatDuration(course.total_time)}</span>
+                  <span className="badge">{course.total_cost.toLocaleString()}원</span>
+                  <span className="badge">{course.stop_count}곳</span>
+                  {badge && <span className={badge.className}>{badge.text}</span>}
+                </div>
+                <div className="muted">{course.place_names.join(' → ')}</div>
               </div>
-
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  onClick={() => onLoadCourse(course.places)}
-                  style={{ padding: '6px 12px', backgroundColor: '#2196F3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  불러오기
-                </button>
-                <button
-                  onClick={() => handleDeleteCourse(course.id)}
-                  style={{ padding: '6px 10px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  삭제
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      )}
+      </StatusHandler>
     </div>
   );
 };

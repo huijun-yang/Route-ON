@@ -14,4 +14,6 @@ class GroupCandidatePlace(Base):
 
     group_session: Mapped["GroupSession"] = relationship(back_populates="candidate_places")
     place: Mapped["Place"] = relationship()
-    votes: Mapped[list["Vote"]] = relationship(back_populates="candidate_place")
+    votes: Mapped[list["Vote"]] = relationship(
+        back_populates="candidate_place", cascade="all, delete-orphan"
+    )

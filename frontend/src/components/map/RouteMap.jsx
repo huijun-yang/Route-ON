@@ -90,7 +90,7 @@ const RouteMap = ({ places, course, selectedPlace, step }) => {
     
   }, [places, course, selectedPlace, step]);
 
-  return <div ref={mapRef} style={{ flex: "1", minWidth: "0px" }}></div>;
+  return <div ref={mapRef} className="map-area"></div>;
 };
 
 export default RouteMap;

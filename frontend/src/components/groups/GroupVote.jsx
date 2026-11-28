@@ -1,159 +1,231 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Crosshair, ThumbsUp, Trash2 } from 'lucide-react';
+import { createPlace } from '../../api/placesApi';
+import {
+  addCandidate,
+  deleteGroup,
+  finalizeGroup,
+  leaveGroup,
+  removeCandidate,
+  unvoteCandidate,
+  voteCandidate,
+} from '../../api/groupsApi';
+import { DEFAULT_START } from '../../utils/defaults';
+import { todayString } from '../../utils/time';
+import PlaceSearch from '../places/PlaceSearch';
 
-const GroupVote = ({ onConfirmPlaces }) => {
-  // 그룹 후보 장소 목록 상태
-  const [candidates, setCandidates] = useState([
-    { id: 1, name: '성수 맛집 A', category: '음식점', votes: 3, votedByMe: false },
-    { id: 2, name: '성수 카페 B', category: '카페', votes: 5, votedByMe: true },
-    { id: 3, name: '서울숲 전시관 C', category: '전시/관광', votes: 2, votedByMe: false },
-  ]);
+// 그룹 한 개의 후보 장소 · 투표 · 코스 확정 화면. 서버 상태(group)를 그대로 보여주고, 변경은 서버 응답으로 갱신합니다.
+const GroupVote = ({ group, onChange, onLeft }) => {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [finalize, setFinalize] = useState({ courseDate: todayString(), startTime: '10:00', maxPlaces: 5 });
+  const [start, setStart] = useState(DEFAULT_START);
 
-  // 새로운 후보 장소 입력 상태
-  const [newPlaceName, setNewPlaceName] = useState('');
-  const [newCategory, setNewCategory] = useState('카페');
+  const isOwner = group.my_role === 'owner';
+  const isOpen = group.status === 'open';
 
-  // 1. 후보 장소 추가
-  const handleAddCandidate = () => {
-    if (!newPlaceName.trim()) {
-      alert('후보 장소명을 입력해주세요.');
-      return;
+  // 서버 호출을 감싸 중복 클릭 방지와 오류 안내를 한 곳에서 처리합니다.
+  const run = async (action) => {
+    setBusy(true);
+    try {
+      return await action();
+    } catch (error) {
+      alert(error.message);
+      return null;
+    } finally {
+      setBusy(false);
     }
-
-    const newCandidate = {
-      id: Date.now(),
-      name: newPlaceName,
-      category: newCategory,
-      votes: 0,
-      votedByMe: false,
-    };
-
-    setCandidates([...candidates, newCandidate]);
-    setNewPlaceName('');
   };
 
-  // 2. 투표 토글 (좋아요 / 취소)
-  const handleToggleVote = (id) => {
-    setCandidates((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const isVoted = item.votedByMe;
-          return {
-            ...item,
-            votes: isVoted ? item.votes - 1 : item.votes + 1,
-            votedByMe: !isVoted,
-          };
-        }
-        return item;
+  const handleAddCandidate = async (place) => {
+    const updated = await run(async () => {
+      await createPlace(place); // 후보로 넣기 전에 장소를 저장해야 합니다.
+      return addCandidate(group.id, place.kakao_place_id);
+    });
+    if (updated) onChange(updated);
+    return Boolean(updated);
+  };
+
+  const handleToggleVote = async (candidate) => {
+    const updated = await run(() =>
+      candidate.voted_by_me ? unvoteCandidate(group.id, candidate.id) : voteCandidate(group.id, candidate.id)
+    );
+    if (updated) onChange(updated);
+  };
+
+  const handleRemove = async (candidate) => {
+    const updated = await run(() => removeCandidate(group.id, candidate.id));
+    if (updated) onChange(updated);
+  };
+
+  const handleFinalize = async () => {
+    if (!window.confirm('투표를 마감하고 코스를 확정할까요? 이후에는 후보와 투표를 바꿀 수 없습니다.')) return;
+    const result = await run(() =>
+      finalizeGroup(group.id, {
+        course_date: finalize.courseDate,
+        start: { lat: start.lat, lng: start.lng },
+        start_time: finalize.startTime,
+        max_places: Number(finalize.maxPlaces) || 5,
       })
+    );
+    if (result) {
+      const active = result.courses.find((c) => c.is_active) ?? result.courses[0];
+      navigate(`/course/view/${active.id}`);
+    }
+  };
+
+  // 출발지: 현재 위치 또는 장소 검색
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert('이 브라우저는 위치 조회를 지원하지 않습니다.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setStart({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: '현재 위치' }),
+      () => alert('현재 위치를 가져오지 못했습니다. 브라우저의 위치 권한을 확인하세요.')
     );
   };
 
-  // 3. 득표수 높은순으로 확정된 코스에 반영
-  const handleFinalizeCourse = () => {
-    // 최소 1표 이상 얻은 장소를 득표순 정렬
-    const selected = [...candidates]
-      .filter((item) => item.votes > 0)
-      .sort((a, b) => b.votes - a.votes);
-
-    if (selected.length === 0) {
-      alert('투표를 받은 후보 장소가 없습니다.');
-      return;
-    }
-
-    if (onConfirmPlaces) {
-      onConfirmPlaces(selected);
-      alert(`${selected.length}개의 장소가 그룹 코스로 최종 확정되었습니다!`);
-    }
+  const handleLeave = async () => {
+    const message = isOwner ? '그룹을 삭제할까요? 모든 멤버에게서 사라집니다.' : '그룹에서 나갈까요?';
+    if (!window.confirm(message)) return;
+    const done = await run(async () => {
+      await (isOwner ? deleteGroup(group.id) : leaveGroup(group.id));
+      return true;
+    });
+    if (done) onLeft();
   };
 
   return (
-    <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '16px' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '12px' }}>7. 그룹 코스 후보 및 투표</h3>
-
-      {/* 후보 장소 추가 입력 폼 */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <input
-          type="text"
-          placeholder="그룹 후보 장소 입력"
-          value={newPlaceName}
-          onChange={(e) => setNewPlaceName(e.target.value)}
-          style={{ flex: 2, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-        <select
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-          style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-        >
-          <option value="음식점">음식점</option>
-          <option value="카페">카페</option>
-          <option value="전시/관광">전시/관광</option>
-          <option value="기타">기타</option>
-        </select>
-        <button
-          onClick={handleAddCandidate}
-          style={{ padding: '8px 12px', backgroundColor: '#2196F3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          후보 추가
-        </button>
+    <div className="stack">
+      <div className="card">
+        <div className="row-between">
+          <h2 className="page-title" style={{ margin: 0, fontSize: '20px' }}>
+            {group.title || '이름 없는 그룹'}
+          </h2>
+          <span className={`badge ${isOpen ? 'badge-success' : ''}`}>{isOpen ? '투표 중' : '확정됨'}</span>
+        </div>
+        <div className="row-wrap" style={{ marginTop: '10px' }}>
+          <span className="badge badge-accent">초대코드 {group.invite_code}</span>
+          {group.members.map((m) => (
+            <span key={m.user_id} className="badge">
+              {m.nickname}
+              {m.role === 'owner' && ' 👑'}
+            </span>
+          ))}
+        </div>
+        {!isOpen && group.course_id && (
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: '12px' }}
+            onClick={() => navigate(`/course/view/${group.course_id}`)}
+          >
+            확정된 코스 보기
+          </button>
+        )}
       </div>
 
-      {/* 후보 장소 리스트 및 투표 버튼 */}
-      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px 0' }}>
-        {candidates.map((item) => (
-          <li
-            key={item.id}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '10px 12px',
-              marginBottom: '8px',
-              border: '1px solid #eee',
-              borderRadius: '6px',
-              backgroundColor: item.votedByMe ? '#e8f4ff' : '#fafafa',
-            }}
-          >
-            <div>
-              <strong style={{ fontSize: '15px' }}>{item.name}</strong>
-              <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>({item.category})</span>
+      {isOpen && (
+        <div className="card">
+          <h3 className="card-title">후보 장소 추가</h3>
+          <PlaceSearch placeholder="후보로 올릴 장소를 검색하세요" onAddPlace={handleAddCandidate} />
+        </div>
+      )}
+
+      {group.candidates.length === 0 && <div className="empty">아직 후보 장소가 없어요. 위에서 검색해 추가해 보세요.</div>}
+
+      {group.candidates.map((item) => (
+        <div
+          key={item.id}
+          className="list-item"
+          style={item.voted_by_me ? { borderColor: 'var(--color-accent)', background: 'var(--color-accent-light)' } : undefined}
+        >
+          <div className="row-between">
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ color: 'var(--color-primary)' }}>{item.place.name}</strong>
+              <div className="muted">
+                {item.place.category?.split('>').pop()?.trim()} · 추가: {item.added_by_nickname ?? '알 수 없음'}
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976D2' }}>👍 {item.votes}표</span>
-              <button
-                onClick={() => handleToggleVote(item.id)}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: item.votedByMe ? '#ff4d4f' : '#e6f7ff',
-                  color: item.votedByMe ? '#fff' : '#1890ff',
-                  border: item.votedByMe ? 'none' : '1px solid #91d5ff',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                {item.votedByMe ? '투표 취소' : '투표하기'}
+            <div className="row">
+              <span className="badge badge-accent">👍 {item.vote_count}표</span>
+              {isOpen && (
+                <>
+                  <button
+                    className={`btn btn-sm ${item.voted_by_me ? '' : 'btn-primary'}`}
+                    disabled={busy}
+                    onClick={() => handleToggleVote(item)}
+                  >
+                    <ThumbsUp size={14} /> {item.voted_by_me ? '취소' : '투표'}
+                  </button>
+                  <button className="icon-btn" aria-label="후보 삭제" disabled={busy} onClick={() => handleRemove(item)}>
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {isOpen && isOwner && (
+        <div className="card">
+          <h3 className="card-title">코스 확정 (대표만)</h3>
+          <div className="stack">
+            <div className="field-row">
+              <label className="field">
+                <span>방문 날짜</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={finalize.courseDate}
+                  onChange={(e) => setFinalize({ ...finalize, courseDate: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>출발 시각</span>
+                <input
+                  className="input"
+                  type="time"
+                  value={finalize.startTime}
+                  onChange={(e) => setFinalize({ ...finalize, startTime: e.target.value })}
+                />
+              </label>
+            </div>
+            <label className="field" style={{ maxWidth: '160px' }}>
+              <span>최대 장소 수</span>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={8}
+                value={finalize.maxPlaces}
+                onChange={(e) => setFinalize({ ...finalize, maxPlaces: e.target.value })}
+              />
+            </label>
+            <div className="row-between">
+              <span className="muted">
+                출발지: <strong>{start.label}</strong>
+              </span>
+              <button className="btn btn-sm" onClick={handleUseMyLocation}>
+                <Crosshair size={14} /> 현재 위치로
               </button>
             </div>
-          </li>
-        ))}
-      </ul>
+            <PlaceSearch
+              placeholder="출발지를 바꾸려면 검색하세요"
+              onAddPlace={(place) => setStart({ lat: place.lat, lng: place.lng, label: place.name })}
+            />
+            <div className="alert">득표 상위 장소로 코스를 만들어요. 영업시간은 대표가 저장한 값을 사용합니다.</div>
+            <button className="btn btn-primary" disabled={busy} onClick={handleFinalize}>
+              투표 마감하고 코스 확정
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* 최종 코스 확정 버튼 */}
-      <button
-        onClick={handleFinalizeCourse}
-        style={{
-          width: '100%',
-          padding: '10px',
-          backgroundColor: '#4CAF50',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          cursor: 'pointer',
-        }}
-      >
-        ✅ 투표 결과 반영 및 코스 확정
+      <button className="btn btn-danger" disabled={busy} onClick={handleLeave}>
+        {isOwner ? '그룹 삭제' : '그룹 나가기'}
       </button>
     </div>
   );
