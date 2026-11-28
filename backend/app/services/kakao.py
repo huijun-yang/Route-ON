@@ -64,3 +64,103 @@ def fetch_kakao_profile(access_token: str, client: httpx.Client) -> KakaoProfile
         nickname=nickname[:50],
         email=email[:100] if email else None,
     )
+
+
+# ---------------------------------------------------------------- 토큰 발급 앱 검증 ----------
+
+KAKAO_TOKEN_INFO_URL = "https://kapi.kakao.com/v1/user/access_token_info"
+
+
+def verify_token_app_id(access_token: str, client: httpx.Client, expected_app_id: str) -> None:
+    """토큰이 '우리 앱'에서 발급된 것인지 확인합니다. (다른 앱의 토큰으로 로그인하는 것을 막음)
+
+    expected_app_id 가 비어 있으면 검사를 건너뜁니다.
+    """
+    if not expected_app_id:
+        return
+    try:
+        response = client.get(KAKAO_TOKEN_INFO_URL, headers={"Authorization": f"Bearer {access_token}"})
+    except httpx.HTTPError as exc:
+        raise KakaoServiceError(f"kakao request failed: {exc.__class__.__name__}") from exc
+    if response.status_code in (400, 401):
+        raise KakaoAuthError("kakao rejected the access token")
+    if response.status_code != 200:
+        raise KakaoServiceError(f"kakao returned status {response.status_code}")
+    try:
+        app_id = response.json().get("appId", response.json().get("app_id"))
+    except ValueError as exc:
+        raise KakaoServiceError("kakao returned invalid json") from exc
+    if str(app_id) != str(expected_app_id):
+        raise KakaoAuthError("token was issued for a different app")
+
+
+# ---------------------------------------------------------------- 장소 검색 (카카오 로컬) ----------
+
+KAKAO_KEYWORD_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
+
+
+class KakaoNotConfiguredError(Exception):
+    """KAKAO_REST_API_KEY 가 설정되지 않았을 때."""
+
+
+@dataclass
+class KakaoPlace:
+    kakao_place_id: str
+    name: str
+    address: str
+    lat: float
+    lng: float
+    category: str | None
+
+
+def search_places(
+    query: str,
+    client: httpx.Client,
+    rest_api_key: str,
+    *,
+    lat: float | None = None,
+    lng: float | None = None,
+    radius_m: int | None = None,
+    size: int = 10,
+    page: int = 1,
+) -> list[KakaoPlace]:
+    """카카오 로컬 '키워드로 장소 검색'. lat/lng 를 주면 그 주변을 우선합니다."""
+    if not rest_api_key:
+        raise KakaoNotConfiguredError("KAKAO_REST_API_KEY is not set")
+    params: dict[str, str | int | float] = {"query": query, "size": size, "page": page}
+    if lat is not None and lng is not None:
+        params["y"] = lat
+        params["x"] = lng
+        if radius_m:
+            params["radius"] = radius_m
+    try:
+        response = client.get(
+            KAKAO_KEYWORD_SEARCH_URL, params=params, headers={"Authorization": f"KakaoAK {rest_api_key}"}
+        )
+    except httpx.HTTPError as exc:
+        raise KakaoServiceError(f"kakao request failed: {exc.__class__.__name__}") from exc
+    if response.status_code in (401, 403):
+        raise KakaoServiceError("kakao rejected the REST API key")
+    if response.status_code != 200:
+        raise KakaoServiceError(f"kakao returned status {response.status_code}")
+    try:
+        documents = response.json().get("documents") or []
+    except ValueError as exc:
+        raise KakaoServiceError("kakao returned invalid json") from exc
+
+    places: list[KakaoPlace] = []
+    for d in documents:
+        try:
+            places.append(
+                KakaoPlace(
+                    kakao_place_id=str(d["id"]),
+                    name=d["place_name"][:100],
+                    address=(d.get("road_address_name") or d.get("address_name") or "")[:200],
+                    lat=float(d["y"]),
+                    lng=float(d["x"]),
+                    category=(d.get("category_name") or None) and d["category_name"][:50],
+                )
+            )
+        except (KeyError, ValueError, TypeError):
+            continue  # 형식이 이상한 항목은 건너뜁니다.
+    return places

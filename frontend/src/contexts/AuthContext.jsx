@@ -1,4 +1,4 @@
-import { createContext, use, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { getMyInfo } from "../api/authApi";
 
 const AuthContext = createContext(null);
@@ -40,6 +40,16 @@ export function AuthProvider({ children }) {
     return () => {
       controller.abort();
     }
+  }, []);
+
+  // API 가 401(토큰 만료)을 돌려주면 fetchInstance 가 알려 줍니다. 로그아웃 상태로 바꿔 로그인 화면으로 보냅니다.
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      setAuthStatus("anonymous");
+    };
+    window.addEventListener("auth:expired", handleExpired);
+    return () => window.removeEventListener("auth:expired", handleExpired);
   }, []);
 
   // 로그인 처리

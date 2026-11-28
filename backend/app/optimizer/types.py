@@ -82,6 +82,7 @@ ExcludeReason = Literal[
     "WINDOW_TOO_SHORT",  # 영업시간(브레이크 제외)이 체류시간보다 짧아 애초에 방문 불가
     "ALREADY_CLOSED",  # 출발 시각 이전에 이미 영업이 끝남 (재계획 때 자주 발생)
     "UNREACHABLE_IN_TIME",  # 이동시간/다른 장소 일정 때문에 영업시간 안에 갈 수 없음
+    "CLOSED_ON_DAY",  # 그날은 휴무일
 ]
 
 

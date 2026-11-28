@@ -12,10 +12,7 @@ export default function StepNavigation({
     <div className="step-navigation">
       <div>
         {showPrev && (
-          <button
-            onClick={onPrev}
-            disabled={prevDisabled}
-          >
+          <button className="btn" onClick={onPrev} disabled={prevDisabled}>
             {prevText}
           </button>
         )}
@@ -23,10 +20,7 @@ export default function StepNavigation({
 
       <div>
         {showNext && (
-          <button
-            onClick={onNext}
-            disabled={nextDisabled}
-          >
+          <button className="btn btn-primary btn-block" onClick={onNext} disabled={nextDisabled}>
             {nextText}
           </button>
         )}

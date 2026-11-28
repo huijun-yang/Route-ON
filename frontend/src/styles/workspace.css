@@ -1,64 +1,557 @@
+/* 코스 만들기 / 코스 보기: 왼쪽 작업 패널 + 오른쪽 지도 */
+
 .course-create-wrapper {
   display: flex;
   flex-direction: row;
   flex: 1;
+  min-width: 0;
+  height: calc(100vh - var(--header-height) - 55px);
+  min-height: 560px;
 }
 
 .course-create-workspace {
+  display: flex;
+  flex-direction: column;
+
   width: 500px;
-  height: 100%;
-  border: 0px;
+  flex-shrink: 0;
+  min-height: 0;
+
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
 }
 
-/* 작업 영역 */
+/* 단계 표시 */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stepper-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.stepper-item.active {
+  color: var(--color-primary);
+}
+
+.stepper-item.active .stepper-dot {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.stepper-item.done .stepper-dot {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* 작업 영역: 위는 스크롤, 아래는 이동 버튼 고정 */
 .step-workspace {
   display: flex;
   flex-direction: column;
-
-  height: 100%;
+  flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
-/* 장소들 리스트 */
-.places-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-
-  padding-inline: 20px;
-  
+.step-scroll {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: none;
-}
-
-.places-list::-webkit-scrollbar {
-  display: none;
-}
-
-/* 장소 하나 */
-.place-item {
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* 장소 이름 */
-.place-title {
+  padding: 16px 20px;
   display: flex;
-  justify-content: space-between;
-
-  width: 100%;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* 스텝 이동 버튼 */
 .step-navigation {
   display: flex;
   justify-content: space-between;
-
-  padding: 10px;
-
-  margin-top: auto;
+  gap: 8px;
+  padding: 12px 20px;
   flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.step-navigation > div:last-child {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 장소 검색 */
+.search-box {
+  display: flex;
+  gap: 8px;
+}
+
+.search-results {
+  max-height: 220px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.search-result {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.search-result:last-child {
+  border-bottom: 0;
+}
+
+.search-result:hover {
+  background: var(--color-accent-light);
+}
+
+.search-result strong {
+  display: block;
+  font-size: 14px;
+}
+
+.search-result span {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* 장소 카드 (검색해서 추가하면 바로 입력칸이 펼쳐진 상태로 나옵니다) */
+.place-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.place-card.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.place-card.closed {
+  background: var(--color-surface-muted);
+}
+
+.place-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.place-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.place-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-card-title strong {
+  display: block;
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.place-card-title span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.hours-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.hours-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hours-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.hours-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 결과: 우선순위 비교 */
+.priority-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.priority-card {
+  padding: 10px;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.priority-card:hover {
+  border-color: var(--color-accent);
+}
+
+.priority-card.selected {
+  border: 2px solid var(--color-accent);
+  padding: 9px;
+  background: var(--color-accent-light);
+}
+
+.priority-card {
+  min-width: 0;
+}
+
+/* 카드 안의 각 줄은 줄바꿈 없이 한 줄로 보여주고, 넘치면 ...으로 줄입니다 */
+.priority-card h4,
+.priority-card p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priority-card h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--color-primary);
+}
+
+.priority-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.priority-card .big {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* 결과: 날씨/피로도 */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.info-card {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 13px;
+}
+
+.info-card h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* 결과: 타임라인 */
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tl-leg {
+  margin: 0 0 0 54px;
+  padding: 6px 0 6px 18px;
+  border-left: 2px dashed var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.tl-stop {
+  display: flex;
+  gap: 12px;
+}
+
+.tl-time {
+  width: 42px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.tl-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tl-body {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.tl-body.clickable {
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tl-body.clickable:hover {
+  border-color: var(--color-accent);
+}
+
+.tl-body.selected {
+  border-color: var(--color-warning);
+  box-shadow: 0 0 0 3px var(--color-warning-bg);
+}
+
+.tl-body strong {
+  font-size: 14px;
+  color: var(--color-primary);
+}
+
+.tl-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 계산 중 화면 */
+.loading-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.loading-panel h3 {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+/* 지도 영역 */
+.map-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--color-accent-light);
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.map-unavailable {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+/* 지도 핀: 방문 순서 번호 + 이름(마우스를 올리거나 선택하면 보임) */
+.map-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.map-pin-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgb(15 23 42 / 35%);
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+/* 핀 끝의 작은 꼬리 */
+.map-pin::after {
+  content: "";
+  width: 0;
+  height: 0;
+  margin-top: -1px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--color-accent);
+}
+
+.map-pin.start .map-pin-circle {
+  background: var(--color-primary);
+  font-size: 12px;
+}
+
+.map-pin.start::after {
+  border-top-color: var(--color-primary);
+}
+
+.map-pin.selected .map-pin-circle {
+  background: var(--color-warning);
+  transform: scale(1.2);
+}
+
+.map-pin.selected::after {
+  border-top-color: var(--color-warning);
+}
+
+.map-pin-label {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.map-pin:hover .map-pin-label,
+.map-pin.selected .map-pin-label,
+.map-pin.start .map-pin-label {
+  opacity: 1;
+}
+
+.map-pin:hover {
+  z-index: 20;
+}
+
+@media (max-width: 960px) {
+  .course-create-wrapper {
+    flex-direction: column-reverse;
+    height: auto;
+  }
+
+  .course-create-workspace {
+    width: 100%;
+    border-right: 0;
+  }
+
+  .step-workspace {
+    min-height: 480px;
+  }
+
+  .map-area {
+    flex: none;
+    height: 300px;
+  }
 }

@@ -48,14 +48,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      minHeight: "100vh"}}>
-      <button onClick={ handleLogin } style={{border: "0px"}}>
-        <img src={kakaoIcon} />
-      </button>
+    <div className="login-page">
+      <div className="login-card">
+        <h1>Route-ON</h1>
+        <p>영업시간과 이동시간을 반영한 코스를 만들어 보세요.</p>
+        <button onClick={handleLogin} aria-label="카카오로 로그인">
+          <img src={kakaoIcon} alt="카카오로 로그인" />
+        </button>
+      </div>
     </div>
   );
 }

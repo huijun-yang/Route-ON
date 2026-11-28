@@ -1,0 +1,543 @@
+/* 공용 UI 컴포넌트 스타일. 색/반경/그림자는 global.css 의 디자인 토큰을 그대로 씁니다. */
+
+:root {
+  --color-accent-dark: #0F4F87;
+  --color-surface-muted: #F8FAFC;
+  --color-warning-bg: #FFF7E6;
+  --color-danger-bg: #FEF2F2;
+  --color-success-bg: #F0FDF4;
+}
+
+/* ------------------------------------------------------------ 버튼 */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  min-height: 38px;
+  padding: 0 16px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap; /* 버튼 안의 글자는 항상 한 줄로 */
+
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+  border-color: var(--color-accent-dark);
+  color: #fff;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-sm {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+  padding: 0;
+
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.icon-btn:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* ------------------------------------------------------------ 입력 */
+
+.input,
+.select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.input-sm {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field > span,
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}
+
+/* ------------------------------------------------------------ 카드 / 배지 / 알림 */
+
+.card {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-accent {
+  background: var(--color-accent-light);
+  border-color: transparent;
+  color: var(--color-accent);
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  border-color: transparent;
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  border-color: transparent;
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  border-color: transparent;
+  color: var(--color-danger);
+}
+
+.alert {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--color-accent-light);
+  color: var(--color-primary);
+}
+
+.alert-warning {
+  background: var(--color-warning-bg);
+  color: #92400E;
+}
+
+.alert-danger {
+  background: var(--color-danger-bg);
+  color: #991B1B;
+}
+
+.empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+  border: 3px solid var(--color-accent-light);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------ 페이지 */
+
+.page {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+.page-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.page-subtitle {
+  margin: 0 0 20px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.muted {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.list-item {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.list-item.clickable {
+  cursor: pointer;
+}
+
+.list-item.clickable:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+
+/* ------------------------------------------------------------ 홈 */
+
+.hero {
+  padding: 40px 32px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin: 0 0 22px;
+  max-width: 520px;
+  color: rgb(255 255 255 / 85%);
+}
+
+.hero .btn-primary {
+  background: #fff;
+  border-color: #fff;
+  color: var(--color-primary);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.feature h3 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.feature p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------ 로그인 */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, var(--color-primary) 0%, #1F4A73 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 36px 28px;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 25%);
+}
+
+.login-card h1 {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+}
+
+.login-card p {
+  margin: 0 0 24px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.login-card button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------ 헤더/사이드바 다듬기 */
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--color-border);
+}
+
+.header-page-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.header-icon-button,
+.mobile-menu-button,
+.header-logout-button,
+.header-login-button,
+.header-user-link {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.header-icon-button {
+  display: flex;
+  align-items: center;
+}
+
+.header-icon-button:hover,
+.header-logout-button:hover,
+.header-login-button:hover,
+.header-user-link:hover {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.sidebar-top {
+  padding-top: 18px;
+}
+
+.sidebar-section-title {
+  padding: 0 13px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgb(255 255 255 / 45%);
+}
+
+.collapsed .sidebar-section-title {
+  display: none;
+}
+
+.sidebar-link {
+  border-radius: var(--radius-md);
+  color: rgb(255 255 255 / 78%);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-link:hover {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.sidebar-link.active {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-toggle {
+  border-radius: var(--radius-md);
+  color: rgb(255 255 255 / 70%);
+}
+
+.sidebar-toggle:hover {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}

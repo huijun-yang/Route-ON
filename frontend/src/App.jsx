@@ -20,6 +20,7 @@ export default function App() {
       {/* 로그인 없이 접근 가능한 페이지 */}
       <Route element={<MainLayout isLoggedIn={isLoggedIn} onLogout={logout} />}>
         <Route path="/" element={<MainPage />} />
+        <Route path="/course/view" element={<CourseViewPage />} />
         <Route
           path="/course/view/:identifier"
           element={<CourseViewPage />}
