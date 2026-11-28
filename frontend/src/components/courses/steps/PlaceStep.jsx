@@ -7,7 +7,7 @@ import {
   upsertBusinessHoursException,
 } from "../../../api/placesApi";
 import { hoursFromServer, hoursToBody, defaultHoursFor, validateHours } from "../../../utils/placeDefaults";
-import { backendWeekday, WEEKDAY_LABEL } from "../../../utils/time";
+import { backendWeekday, todayString, WEEKDAY_LABEL, yesterdayString } from "../../../utils/time";
 import PlaceSearch from "../../places/PlaceSearch";
 import StepNavigation from "./StepNavigation";
 
@@ -266,6 +266,10 @@ export default function PlaceStep({
       alert("방문 날짜를 선택하세요.");
       return;
     }
+    if (settings.courseDate < yesterdayString()) {
+      alert("지난 날짜로는 코스를 만들 수 없습니다. 오늘 이후 날짜를 선택하세요.");
+      return;
+    }
     if (places.length === 0) {
       alert("방문할 장소를 한 곳 이상 추가하세요.");
       return;
@@ -323,6 +327,7 @@ export default function PlaceStep({
                 <input
                   className="input"
                   type="date"
+                  min={todayString()}
                   value={settings.courseDate}
                   onChange={(e) => updateSettings({ courseDate: e.target.value })}
                 />

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import date as date_type
 
 import httpx
@@ -66,6 +67,37 @@ def save_place(
     return place
 
 
+@dataclass(frozen=True)
+class _SearchAttempt:
+    query: str
+    lat: float | None
+    lng: float | None
+    radius: int | None
+
+
+def _search_attempts(
+    query: str, lat: float | None, lng: float | None, radius: int | None, page: int
+) -> list[_SearchAttempt]:
+    """검색어로 결과가 없을 때 차례로 시도할 조건들.
+
+    카카오 키워드 검색은 검색어가 길거나(예: "경희대학교 서울캠퍼스") 반경 안에 장소가 없으면 빈 결과를 줍니다.
+    그래서 ① 요청 그대로 → ② 반경 없이 → ③ 마지막 단어를 하나씩 줄여가며(최대 2번) 찾습니다.
+    첫 페이지 검색에서만 이렇게 넓히고, 다음 페이지는 요청 그대로만 조회합니다.
+    """
+    attempts = [_SearchAttempt(query, lat, lng, radius)]
+    if page > 1:
+        return attempts
+    if lat is not None:
+        attempts.append(_SearchAttempt(query, None, None, None))
+    words = query.split()
+    for _ in range(2):
+        if len(words) <= 1:
+            break
+        words = words[:-1]
+        attempts.append(_SearchAttempt(" ".join(words), None, None, None))
+    return attempts
+
+
 # 주의: GET /search 는 GET /{place_id} 보다 위에 선언해야 합니다. (아니면 "search" 가 장소 ID 로 해석됨)
 @router.get("/search", response_model=list[PlaceCreate])
 def search_kakao_places(
@@ -82,9 +114,20 @@ def search_kakao_places(
     if (lat is None) != (lng is None):
         raise HTTPException(status_code=422, detail="lat 와 lng 는 함께 보내야 합니다")
     try:
-        found = search_places(
-            query, client, settings.kakao_rest_api_key, lat=lat, lng=lng, radius_m=radius, size=size, page=page
-        )
+        found = []
+        for attempt in _search_attempts(query, lat, lng, radius, page):
+            found = search_places(
+                attempt.query,
+                client,
+                settings.kakao_rest_api_key,
+                lat=attempt.lat,
+                lng=attempt.lng,
+                radius_m=attempt.radius,
+                size=size,
+                page=page,
+            )
+            if found:
+                break
     except KakaoNotConfiguredError:
         raise HTTPException(status_code=503, detail="장소 검색이 설정되지 않았습니다 (KAKAO_REST_API_KEY)")
     except KakaoServiceError:

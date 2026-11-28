@@ -9,7 +9,15 @@ import Timeline from "../Timeline";
 import StepNavigation from "./StepNavigation";
 
 // 계산된 코스 3개(최단 시간/최소 도보/최저 비용)를 비교하고, 하나를 골라 일정표를 봅니다.
-export default function ResultStep({ onEdit, plan, setPlan, selectedPriority, setSelectedPriority }) {
+export default function ResultStep({
+  onEdit,
+  plan,
+  setPlan,
+  selectedPriority,
+  setSelectedPriority,
+  selectedPlace,
+  setSelectedPlace,
+}) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -87,7 +95,16 @@ export default function ResultStep({ onEdit, plan, setPlan, selectedPriority, se
 
         <PriorityView variants={variants} selectedPriority={course.priority_type} onSelectVariant={handleSelectVariant} />
         <WeatherFatigue course={course} />
-        <Timeline course={course} onExtend={handleExtend} busy={busy} showEstimateNote={false} />
+        <Timeline
+          course={course}
+          onExtend={handleExtend}
+          busy={busy}
+          showEstimateNote={false}
+          selectedId={selectedPlace?.kakao_place_id}
+          onSelectStop={(stop) =>
+            setSelectedPlace(selectedPlace?.kakao_place_id === stop.place.kakao_place_id ? null : stop.place)
+          }
+        />
 
         <div className="row-wrap">
           <button className="btn" onClick={handleCopyLink}>

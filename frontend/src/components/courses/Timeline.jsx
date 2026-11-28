@@ -11,7 +11,7 @@ const hoursText = (hours) => {
 
 // 코스(CourseRead) 한 개의 방문 순서를 시간순으로 보여줍니다.
 // onExtend 를 넘기면 각 장소에 "30분 더" 버튼이 나옵니다. (재계획)
-const Timeline = ({ course, onExtend, busy = false, showEstimateNote = true }) => {
+const Timeline = ({ course, onExtend, busy = false, showEstimateNote = true, selectedId, onSelectStop }) => {
   const stops = course?.stops ?? [];
   const excluded = course?.excluded ?? [];
 
@@ -47,11 +47,21 @@ const Timeline = ({ course, onExtend, busy = false, showEstimateNote = true }) =
                 {stop.arrival_day_offset > 0 && <sup>+{stop.arrival_day_offset}</sup>}
               </span>
               <span className="tl-marker">{idx + 1}</span>
-              <div className="tl-body">
+              <div
+                className={`tl-body${onSelectStop ? ' clickable' : ''}${selectedId === stop.place.kakao_place_id ? ' selected' : ''}`}
+                onClick={onSelectStop ? () => onSelectStop(stop) : undefined}
+              >
                 <div className="row-between">
                   <strong>{stop.place.name}</strong>
                   {onExtend && (
-                    <button className="btn btn-sm" disabled={busy} onClick={() => onExtend(stop, idx)}>
+                    <button
+                      className="btn btn-sm"
+                      disabled={busy}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onExtend(stop, idx);
+                      }}
+                    >
                       +30분
                     </button>
                   )}

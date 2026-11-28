@@ -142,7 +142,8 @@ export default function CourseCreateWorkspace({
           setPlan={setPlan}
           selectedPriority={selectedPriority}
           setSelectedPriority={setSelectedPriority}
-          settings={settings}
+          selectedPlace={selectedPlace}
+          setSelectedPlace={setSelectedPlace}
         />
       )}
     </section>

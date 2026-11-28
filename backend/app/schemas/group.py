@@ -1,8 +1,8 @@
 from datetime import date, datetime, time
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.course import StartPoint
+from app.schemas.course import StartPoint, ensure_not_past
 from app.schemas.place import PlaceRead
 
 
@@ -67,3 +67,8 @@ class GroupFinalizeRequest(BaseModel):
     max_places: int = Field(default=5, ge=1, le=8, description="득표 상위 N곳만 코스에 넣습니다")
     default_stay_min: int | None = Field(default=None, ge=5, le=720, description="비우면 장소 유형별 추천 체류시간")
     stay_overrides: dict[str, int] = Field(default_factory=dict, description="장소별 체류시간(분)")
+
+    @field_validator("course_date")
+    @classmethod
+    def not_past(cls, value: date) -> date:
+        return ensure_not_past(value)

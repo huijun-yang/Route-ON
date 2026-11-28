@@ -1,4 +1,4 @@
-from tests.conftest import as_user
+from tests.conftest import SAT, as_user
 
 API = "/api/v1"
 ALICE, BOB, CAROL = as_user("alice"), as_user("bob"), as_user("carol")
@@ -74,7 +74,7 @@ def test_only_adder_or_owner_can_remove_candidate(client, saved_places):
 
 def finalize_body(**kw):
     body = {
-        "course_date": "2026-12-05",
+        "course_date": SAT,
         "start": {"lat": 37.5547, "lng": 126.9707},
         "start_time": "10:00",
     }

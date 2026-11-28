@@ -1,5 +1,6 @@
 """API 테스트 공통 설정. SQLite(메모리) + 가짜 외부 API 로 돌아가므로 DB/키가 없어도 됩니다."""
 import os
+from datetime import date, timedelta
 
 import httpx
 import pytest
@@ -84,6 +85,21 @@ def client(db_session, users):
     app.dependency_overrides.clear()
 
 
+def _upcoming_saturday() -> date:
+    """내일 이후의 첫 토요일. (과거 날짜는 코스를 만들 수 없으므로 테스트 날짜를 항상 미래로 잡습니다)"""
+    day = date.today() + timedelta(days=2)
+    while day.weekday() != 5:
+        day += timedelta(days=1)
+    return day
+
+
+_SAT = _upcoming_saturday()
+SAT = _SAT.isoformat()  # 토요일 (weekday=5)
+SUN = (_SAT + timedelta(days=1)).isoformat()
+MID = (_SAT + timedelta(days=5)).isoformat()  # SUN 과 NEXT_SAT 사이
+NEXT_SAT = (_SAT + timedelta(days=7)).isoformat()
+
+
 def as_user(name: str) -> dict:
     return {"X-Test-User": name}
 
@@ -106,7 +122,7 @@ def saved_places(client):
 def course_body(stop_ids=("p1", "p2", "p4"), **overrides):
     body = {
         "title": "테스트 코스",
-        "course_date": "2026-12-05",  # 토요일
+        "course_date": SAT,  # 토요일
         "start": {"lat": 37.5547, "lng": 126.9707},
         "start_time": "10:00",
         "stops": [{"place_id": pid, "stay_min": 60} for pid in stop_ids],

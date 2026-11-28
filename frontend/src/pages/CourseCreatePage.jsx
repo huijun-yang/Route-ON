@@ -24,16 +24,28 @@ export default function CourseCreatePage() {
   // 결과 화면에서 보고 있는 우선순위 ("time" | "walk" | "cost")
   const [selectedPriority, setSelectedPriority] = useState("time");
 
+  // 결과 화면에서 보고 있는 코스
+  const currentCourse = plan?.courses?.find((c) => c.priority_type === selectedPriority);
+
+  // 지도의 출발지: 결과 화면이면 코스에 저장된 출발 좌표(재계획하면 바뀜), 아니면 입력한 출발지
+  const mapStart = useMemo(
+    () =>
+      step === 3 && currentCourse?.start_lat != null
+        ? { lat: currentCourse.start_lat, lng: currentCourse.start_lng, label: "출발지" }
+        : settings.start,
+    [step, currentCourse, settings.start]
+  );
+
   // 지도에 그릴 경로: 결과 화면이면 선택한 우선순위 코스의 방문 순서, 아니면 입력한 장소
   const course = useMemo(() => {
-    const current = plan?.courses?.find((c) => c.priority_type === selectedPriority);
+    const current = currentCourse;
     return (current?.stops ?? []).map((s) => ({
       kakao_place_id: s.place.kakao_place_id,
       name: s.place.name,
       lat: s.place.lat,
       lng: s.place.lng,
     }));
-  }, [plan, selectedPriority]);
+  }, [currentCourse]);
 
   return (
     <div className="course-create-wrapper">
@@ -51,7 +63,14 @@ export default function CourseCreatePage() {
         selectedPlace={selectedPlace}
         setSelectedPlace={setSelectedPlace}
       />
-      <RouteMap places={places} course={course} selectedPlace={selectedPlace} step={step} />
+      <RouteMap
+        places={places}
+        course={course}
+        start={mapStart}
+        selectedPlace={selectedPlace}
+        step={step}
+        onSelectPlace={setSelectedPlace}
+      />
     </div>
   );
 }

@@ -42,6 +42,16 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // API 가 401(토큰 만료)을 돌려주면 fetchInstance 가 알려 줍니다. 로그아웃 상태로 바꿔 로그인 화면으로 보냅니다.
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      setAuthStatus("anonymous");
+    };
+    window.addEventListener("auth:expired", handleExpired);
+    return () => window.removeEventListener("auth:expired", handleExpired);
+  }, []);
+
   // 로그인 처리
   const login = async (accessToken) => {
     localStorage.setItem("accessToken", accessToken);

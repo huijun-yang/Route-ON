@@ -22,6 +22,15 @@ export const todayString = () => {
   return `${now.getFullYear()}-${mm}-${dd}`;
 };
 
+// 어제 날짜 "YYYY-MM-DD" (서버는 시차를 고려해 어제까지 허용합니다)
+export const yesterdayString = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+};
+
 // 소요시간(분) → "1시간 20분"
 export const formatDuration = (minutes) => {
   if (!minutes) return '0분';

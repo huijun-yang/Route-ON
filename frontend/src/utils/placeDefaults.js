@@ -55,10 +55,27 @@ export const hoursToBody = (hours) =>
         break_end: hours.hasBreak ? hours.breakEnd : null,
       };
 
+const toMinutes = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};
+
 // 영업시간 입력값 검사. 문제가 있으면 안내 문구를, 없으면 null 을 돌려줍니다.
+// 서버의 검증 규칙과 같습니다. (자정을 넘기는 영업과 휴식도 한 줄로 펴서 비교)
 export const validateHours = (hours) => {
   if (hours.isClosed) return null;
   if (!hours.openTime || !hours.closeTime) return '영업 시작/종료 시각을 입력하세요.';
-  if (hours.hasBreak && (!hours.breakStart || !hours.breakEnd)) return '휴식 시작/종료 시각을 입력하세요.';
+  if (!hours.hasBreak) return null;
+  if (!hours.breakStart || !hours.breakEnd) return '휴식 시작/종료 시각을 입력하세요.';
+  if (hours.breakStart === hours.breakEnd) return '휴식 시작과 종료가 같을 수 없습니다.';
+
+  const open = toMinutes(hours.openTime);
+  let close = toMinutes(hours.closeTime);
+  if (close <= open) close += 1440;
+  let start = toMinutes(hours.breakStart);
+  let end = toMinutes(hours.breakEnd);
+  if (start < open) start += 1440;
+  if (end <= start) end += 1440;
+  if (!(open <= start && start < end && end <= close)) return '휴식 시간은 영업시간 안에 있어야 합니다.';
   return null;
 };

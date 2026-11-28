@@ -1,5 +1,5 @@
 """프론트엔드(frontend/src)가 실제로 보내는 요청 형태로 한 흐름을 끝까지 돌려, 서버와 계약이 맞는지 확인합니다."""
-from tests.conftest import as_user
+from tests.conftest import NEXT_SAT, SAT, as_user
 
 API = "/api/v1"
 BOB = as_user("bob")
@@ -34,7 +34,7 @@ def test_course_flow_with_frontend_payloads(client):
     # 날짜 하루만 적용
     r = client.post(
         f"{API}/places/fe1/business-hours/exceptions",
-        json={"is_closed": False, "open_time": "11:00", "close_time": "20:00", "break_start": None, "break_end": None, "date": "2026-12-12"},
+        json={"is_closed": False, "open_time": "11:00", "close_time": "20:00", "break_start": None, "break_end": None, "date": NEXT_SAT},
     )
     assert r.status_code == 201, r.text
 
@@ -44,7 +44,7 @@ def test_course_flow_with_frontend_payloads(client):
 
     # 4) 코스 생성 (LoadingStep): stay_min 은 비우고, title 도 비움
     body = {
-        "course_date": "2026-12-05",  # 토요일 = weekday 5
+        "course_date": SAT,  # 토요일 = weekday 5
         "start": {"lat": 37.5663, "lng": 126.9779},
         "start_time": "10:00",
         "stops": [
@@ -104,7 +104,7 @@ def test_all_closed_error_has_excluded_for_alert(client):
     r = client.post(
         f"{API}/courses",
         json={
-            "course_date": "2026-12-05",
+            "course_date": SAT,
             "start": {"lat": 37.5, "lng": 127.0},
             "start_time": "10:00",
             "stops": [{"place_id": "fe1", "estimated_cost": 0}],
@@ -131,7 +131,7 @@ def test_group_flow_with_frontend_payloads(client):
     for c in cand:
         assert client.post(f"{API}/groups/{g['id']}/candidates/{c['id']}/vote").status_code == 200
     # 멤버는 확정할 수 없음
-    body = {"course_date": "2026-12-05", "start": {"lat": 37.5663, "lng": 126.9779}, "start_time": "10:00", "max_places": 5}
+    body = {"course_date": SAT, "start": {"lat": 37.5663, "lng": 126.9779}, "start_time": "10:00", "max_places": 5}
     assert client.post(f"{API}/groups/{g['id']}/finalize", json=body, headers=BOB).status_code == 403
     r = client.post(f"{API}/groups/{g['id']}/finalize", json=body)
     assert r.status_code == 201, r.text

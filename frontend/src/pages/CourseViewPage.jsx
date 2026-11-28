@@ -52,6 +52,7 @@ function CourseDetail({ identifier }) {
   const [course, setCourse] = useState(null);
   const [versions, setVersions] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(null); // 지도에서 강조할 장소
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -102,6 +103,12 @@ function CourseDetail({ identifier }) {
     [shown]
   );
 
+  // 출발지 (코스에 저장된 좌표)
+  const startPoint = useMemo(
+    () => (shown?.start_lat != null ? { lat: shown.start_lat, lng: shown.start_lng, label: '출발지' } : null),
+    [shown?.start_lat, shown?.start_lng]
+  );
+
   return (
     <div className="course-create-wrapper">
       <section className="course-create-workspace">
@@ -126,14 +133,27 @@ function CourseDetail({ identifier }) {
                   />
                 )}
                 <WeatherFatigue course={shown} />
-                <Timeline course={shown} />
+                <Timeline
+                  course={shown}
+                  selectedId={selectedPlace?.kakao_place_id}
+                  onSelectStop={(stop) =>
+                    setSelectedPlace(selectedPlace?.kakao_place_id === stop.place.kakao_place_id ? null : stop.place)
+                  }
+                />
               </>
             )}
           </StatusHandler>
           </div>
         </div>
       </section>
-      <RouteMap places={[]} course={mapStops} selectedPlace={null} step={3} />
+      <RouteMap
+        places={[]}
+        course={mapStops}
+        start={startPoint}
+        selectedPlace={selectedPlace}
+        step={3}
+        onSelectPlace={setSelectedPlace}
+      />
     </div>
   );
 }

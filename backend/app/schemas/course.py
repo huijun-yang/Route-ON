@@ -1,8 +1,9 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
+from app.schemas.business_hours import HoursFields
 from app.schemas.place import PlaceRead
 
 # 우선순위 3버전: 이동시간 / 도보량 / 교통비
@@ -11,6 +12,16 @@ CourseStatus = Literal["OK", "PARTIAL", "NO_FEASIBLE"]
 
 PRIORITY_LABEL = {"time": "최단 시간", "walk": "최소 도보", "cost": "최저 비용"}
 DAY_MIN = 1440
+
+
+KST = timezone(timedelta(hours=9))
+
+
+def ensure_not_past(value: date) -> date:
+    """코스 날짜가 어제보다 이전이면 거부합니다. (시차 때문에 어제까지는 허용)"""
+    if value < datetime.now(KST).date() - timedelta(days=1):
+        raise ValueError("지난 날짜로는 코스를 만들 수 없습니다")
+    return value
 
 
 def fmt_minutes(minutes: int | None) -> tuple[str | None, int]:
@@ -28,26 +39,11 @@ def parse_hhmm(value: str) -> int:
 # ---------------------------------------------------------------- 요청 ----------
 
 
-class HoursOverride(BaseModel):
-    """이번 코스 계산에만 쓰는 영업시간. 저장된 영업시간보다 우선합니다. (open == close 면 24시간, is_closed 면 휴무)"""
+class HoursOverride(HoursFields):
+    """이번 코스 계산에만 쓰는 영업시간. 저장된 영업시간보다 우선합니다. (open == close 면 24시간, is_closed 면 휴무)
 
-    is_closed: bool = False
-    open_time: time | None = None
-    close_time: time | None = None
-    break_start: time | None = None
-    break_end: time | None = None
-
-    @model_validator(mode="after")
-    def check_break(self):
-        if self.is_closed:
-            if any(v is not None for v in (self.open_time, self.close_time, self.break_start, self.break_end)):
-                raise ValueError("휴무일(is_closed=true)에는 영업시간/브레이크타임을 입력할 수 없습니다")
-            return self
-        if self.open_time is None or self.close_time is None:
-            raise ValueError("open_time 과 close_time 은 휴무일이 아니면 필수입니다")
-        if (self.break_start is None) != (self.break_end is None):
-            raise ValueError("break_start 와 break_end 는 함께 입력하거나 둘 다 비워야 합니다")
-        return self
+    입력 규칙과 검증(휴무일에는 시간 금지, 브레이크타임은 영업시간 안)은 저장용 영업시간과 같습니다.
+    """
 
 
 class StopInput(BaseModel):
@@ -63,11 +59,17 @@ class StartPoint(BaseModel):
 
 
 class CourseCreateRequest(BaseModel):
+    # 아래 field_validator 로 날짜 검사
     title: str | None = Field(default=None, max_length=80)
     course_date: date
     start: StartPoint
     start_time: time = Field(description="출발 시각 (예: 10:00)")
     stops: list[StopInput] = Field(min_length=1, max_length=8)
+
+    @field_validator("course_date")
+    @classmethod
+    def not_past(cls, value: date) -> date:
+        return ensure_not_past(value)
 
     @model_validator(mode="after")
     def no_duplicates(self):

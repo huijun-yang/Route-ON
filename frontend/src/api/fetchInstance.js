@@ -45,6 +45,11 @@ const fetchInstance = async (endpoint, options = {}) => {
   // HTTP 오류 처리
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
+    // 로그인 토큰이 만료/무효면 저장된 토큰을 지우고 앱에 알려 로그인 화면으로 보냅니다.
+    if (response.status === 401 && token && !endpoint.startsWith('/auth/kakao')) {
+      localStorage.removeItem('accessToken');
+      window.dispatchEvent(new Event('auth:expired'));
+    }
     const error = new Error(extractMessage(errorData, response.status));
     error.status = response.status;
     error.detail = errorData?.detail; // 코스 생성 422 의 excluded 목록 등을 화면에서 쓸 수 있게 보관

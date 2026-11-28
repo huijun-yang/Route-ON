@@ -1,4 +1,4 @@
-from tests.conftest import as_user, course_body
+from tests.conftest import MID, NEXT_SAT, SAT, SUN, as_user, course_body
 
 API = "/api/v1"
 
@@ -205,7 +205,7 @@ def test_replan_by_non_owner_creates_own_copy(client, saved_places):
         client.post(f"{API}/groups/{g['id']}/candidates/{cand['id']}/vote")
     fin = client.post(
         f"{API}/groups/{g['id']}/finalize",
-        json={"course_date": "2026-12-05", "start": {"lat": 37.5547, "lng": 126.9707}, "start_time": "10:00"},
+        json={"course_date": SAT, "start": {"lat": 37.5547, "lng": 126.9707}, "start_time": "10:00"},
     )
     original = fin.json()["courses"][0]
     r = client.post(
@@ -303,12 +303,12 @@ def test_recommend_stay_rules():
 def test_date_exception_overrides_weekday_hours(client, saved_places):
     # 요일 규칙은 12~18시, 그러나 2026-12-05 하루만 별도 규칙.
     client.post(f"{API}/places/p2/business-hours", json={"weekday": 5, "open_time": "12:00", "close_time": "18:00"})
-    r = client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": "2026-12-05", "is_closed": True})
+    r = client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": SAT, "is_closed": True})
     assert r.status_code == 201, r.text
     # 같은 날짜 재저장은 수정(200)
     r = client.post(
         f"{API}/places/p2/business-hours/exceptions",
-        json={"date": "2026-12-05", "open_time": "14:00", "close_time": "16:00"},
+        json={"date": SAT, "open_time": "14:00", "close_time": "16:00"},
     )
     assert r.status_code == 200
     course = create(client, saved_places)["courses"][0]
@@ -317,24 +317,24 @@ def test_date_exception_overrides_weekday_hours(client, saved_places):
     assert p2["start_min"] >= 14 * 60 and p2["departure_min"] <= 16 * 60
 
     # 예외를 임시휴무로 바꾸면 제외됨
-    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": "2026-12-05", "is_closed": True})
+    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": SAT, "is_closed": True})
     data = create(client, saved_places)
     assert all(c["excluded"][0]["reason"] == "CLOSED_ON_DAY" for c in data["courses"])
 
     # 삭제하면 요일 규칙으로 복귀
-    assert client.delete(f"{API}/places/p2/business-hours/exceptions/2026-12-05").status_code == 204
+    assert client.delete(f"{API}/places/p2/business-hours/exceptions/{SAT}").status_code == 204
     course = create(client, saved_places)["courses"][0]
     assert {s["place"]["kakao_place_id"]: s for s in course["stops"]}["p2"]["hours"]["source"] == "saved"
 
 
 def test_date_exception_list_validation_and_other_dates_unaffected(client, saved_places):
-    assert client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": "2026-12-05"}).status_code == 422
-    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": "2026-12-12", "is_closed": True})
-    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": "2026-12-06", "is_closed": True})
+    assert client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": SAT}).status_code == 422
+    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": NEXT_SAT, "is_closed": True})
+    client.post(f"{API}/places/p2/business-hours/exceptions", json={"date": SUN, "is_closed": True})
     rows = client.get(f"{API}/places/p2/business-hours/exceptions").json()
-    assert [r["date"] for r in rows] == ["2026-12-06", "2026-12-12"]
-    rows = client.get(f"{API}/places/p2/business-hours/exceptions?from_date=2026-12-10").json()
-    assert [r["date"] for r in rows] == ["2026-12-12"]
+    assert [r["date"] for r in rows] == [SUN, NEXT_SAT]
+    rows = client.get(f"{API}/places/p2/business-hours/exceptions?from_date={MID}").json()
+    assert [r["date"] for r in rows] == [NEXT_SAT]
     # 12-05 코스는 영향 없음
     assert all(s["hours"]["source"] == "assumed" for s in create(client, saved_places)["courses"][0]["stops"])
     assert client.delete(f"{API}/places/p2/business-hours/exceptions/2030-01-01").status_code == 404
@@ -369,3 +369,24 @@ def test_replan_keeps_closed_place_excluded(client, saved_places):
     new = r.json()["courses"][0]
     assert {s["place"]["kakao_place_id"] for s in new["stops"]} == {"p1", "p4"}
     assert [e["reason"] for e in new["excluded"]] == ["CLOSED_ON_DAY"]
+
+
+def test_past_course_date_is_rejected(client, saved_places):
+    body = course_body(course_date="2020-01-01")
+    r = client.post(f"{API}/courses", json=body)
+    assert r.status_code == 422
+    assert "지난 날짜" in r.text
+
+
+def test_inline_hours_break_must_be_inside_opening_hours(client, saved_places):
+    # 영업 10:00~14:00 인데 휴식이 15:00~17:00 이면 거부 (저장용 영업시간과 같은 검증)
+    body = course_body(stop_ids=("p2",))
+    body["stops"][0]["hours"] = {
+        "open_time": "10:00",
+        "close_time": "14:00",
+        "break_start": "15:00",
+        "break_end": "17:00",
+    }
+    r = client.post(f"{API}/courses", json=body)
+    assert r.status_code == 422
+    assert "브레이크타임" in r.text

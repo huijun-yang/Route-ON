@@ -162,3 +162,48 @@ def test_production_requires_custom_jwt_secret():
 def test_cors_origins_parse():
     s = Settings(cors_origins="http://a.com, http://b.com ,")
     assert s.cors_origin_list == ["http://a.com", "http://b.com"]
+
+
+# ------------------------------------------------------------------ 장소 검색: 결과가 없을 때 조건을 넓혀 재시도
+
+
+def test_place_search_retries_without_radius_then_with_shorter_query(client, monkeypatch):
+    monkeypatch.setattr(settings, "kakao_rest_api_key", "rest-key")
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = dict(request.url.params)
+        calls.append((params["query"], "radius" in params))
+        # 전체 검색어("경희대학교 서울캠퍼스")는 결과가 없고, 줄인 검색어("경희대학교")에서만 찾아짐
+        if params["query"] == "경희대학교":
+            return httpx.Response(200, json=KAKAO_DOCS)
+        return httpx.Response(200, json={"documents": []})
+
+    use_kakao(handler)
+    r = client.get(
+        f"{API}/places/search",
+        params={"query": "경희대학교 서울캠퍼스", "lat": 37.5663, "lng": 126.9779, "radius": 20000},
+    )
+    assert r.status_code == 200, r.text
+    assert [p["kakao_place_id"] for p in r.json()] == ["111", "222"]
+    # ① 반경 포함 → ② 반경 없이 → ③ 마지막 단어를 뺀 검색어
+    assert calls == [("경희대학교 서울캠퍼스", True), ("경희대학교 서울캠퍼스", False), ("경희대학교", False)]
+
+
+def test_place_search_stops_at_first_hit_and_does_not_widen_later_pages(client, monkeypatch):
+    monkeypatch.setattr(settings, "kakao_rest_api_key", "rest-key")
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(dict(request.url.params)["query"])
+        return httpx.Response(200, json={"documents": []})
+
+    use_kakao(handler)
+    # 결과가 없으면 두 번까지 줄여서 시도하고, 그래도 없으면 빈 목록
+    r = client.get(f"{API}/places/search", params={"query": "가 나 다 라"})
+    assert r.status_code == 200 and r.json() == []
+    assert calls == ["가 나 다 라", "가 나 다", "가 나"]
+    # 2페이지부터는 넓히지 않음
+    calls.clear()
+    client.get(f"{API}/places/search", params={"query": "가 나 다 라", "page": 2})
+    assert calls == ["가 나 다 라"]
